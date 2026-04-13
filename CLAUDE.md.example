@@ -1,0 +1,12 @@
+# Claude Code — [Your Name]
+
+## Agent System
+
+When the user says **"apply <agent>"**, immediately:
+1. Read the corresponding system prompt file from the table below
+2. Adopt that agent's persona, role, and instructions fully
+3. Follow the agent's session-start instructions
+
+| Command | System Prompt File |
+|---|---|
+| `apply example` | `/path/to/AI-Vault/Agents/Example/system-prompt.md` |

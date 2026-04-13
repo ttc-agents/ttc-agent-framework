@@ -1,0 +1,24 @@
+# Credentials & secrets
+.env
+*.env
+credentials.md
+*.key
+*.pem
+*.secret
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+
+# Node
+node_modules/
+
+# OS
+.DS_Store
+
+# Logs
+*.log
+
+# Working/output dirs
+working/

@@ -1,0 +1,41 @@
+{
+  "base_dir": "~/AI-Vault",
+  "default_python": "{base_dir}/.venv/bin/python3",
+  "state_file": "{base_dir}/Agents/.dispatcher-state.json",
+  "lock_file": "~/.ttc-dispatcher.lock",
+
+  "scheduled_tasks": [
+    {
+      "name": "morning-briefing",
+      "times": [[7, 0]],
+      "script": "{base_dir}/Agents/Personal/morning-briefing.py",
+      "args": [],
+      "log": "{base_dir}/Agents/Personal/morning-briefing.log"
+    },
+    {
+      "name": "knowledge-sync",
+      "times": [[23, 30]],
+      "script": "{base_dir}/Agents/sync_personal_knowledge.py",
+      "args": [],
+      "log": "{base_dir}/Agents/sync_check.log"
+    },
+    {
+      "name": "kb-convert",
+      "times": [[2, 0]],
+      "script": "{base_dir}/scripts/convert_to_knowledge_base.py",
+      "args": [],
+      "log": "{base_dir}/logs/kb-convert.log"
+    }
+  ],
+
+  "watch_tasks": [
+    {
+      "name": "fix-config",
+      "watch": "~/.claude.json",
+      "script": "{base_dir}/scripts/fix-config.py",
+      "args": [],
+      "python": "/usr/bin/python3",
+      "log": "{base_dir}/logs/fix-config.log"
+    }
+  ]
+}
