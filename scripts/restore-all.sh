@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 
-GITHUB_USER="jojoba72"
+GITHUB_ORG="ttc-agents"
 AGENTS_DIR="${1:-$HOME/AI-Vault/Agents}"
 
 REPOS=(
@@ -34,7 +34,7 @@ for entry in "${REPOS[@]}"; do
         git -C "$TARGET" pull --ff-only
     else
         echo "Cloning $REPO into $DIR..."
-        gh repo clone "$GITHUB_USER/$REPO" "$TARGET"
+        gh repo clone "$GITHUB_ORG/$REPO" "$TARGET"
     fi
 done
 
