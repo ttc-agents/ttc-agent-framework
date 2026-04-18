@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     TTC Agent Framework - One-command installer (Windows)
 

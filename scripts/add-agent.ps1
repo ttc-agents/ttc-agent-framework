@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Install a single TTC agent by name (Windows).
 
