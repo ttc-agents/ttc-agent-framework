@@ -25,7 +25,7 @@ declare -A DIR_MAP=(
     [sap]="SAP" [test]="Test" [taf]="TAF" [tender]="Tender"
     [hr]="HR" [bwbm]="BwBm" [pptx]="PPTX" [odoo]="Odoo"
     [contracts]="Contracts" [finance]="Finance" [personal]="Personal"
-    [private]="Private" [infra]="Infrastructure"
+    [private]="Private" [infra]="Infrastructure" [tom]="QA_TOM_Generator"
 )
 
 DIR="${DIR_MAP[$NAME]:-}"

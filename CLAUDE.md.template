@@ -22,4 +22,4 @@ When the user says **"apply <agent>"** (e.g. "apply test"), immediately:
 & $env:USERPROFILE\AI-Vault\ttc-agent-framework\scripts\add-agent.ps1 <name>
 ```
 
-Available optional agents: `hr`, `bwbm`, `pptx`, `odoo`, `contracts`, `finance`, `personal`, `private`, `infra`.
+Available optional agents: `hr`, `bwbm`, `pptx`, `odoo`, `contracts`, `finance`, `tom`, `personal`, `private`, `infra`.

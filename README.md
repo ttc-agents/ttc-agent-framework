@@ -64,7 +64,7 @@ Full guides: [docs/install-mac.md](docs/install-mac.md) · [docs/install-windows
 & "$env:USERPROFILE\AI-Vault\ttc-agent-framework\scripts\add-agent.ps1" <name>
 ```
 
-Available: `hr`, `bwbm`, `pptx`, `odoo`, `contracts`, `finance`, `personal`, `private`, `infra`.
+Available: `hr`, `bwbm`, `pptx`, `odoo`, `contracts`, `finance`, `tom`, `personal`, `private`, `infra`.
 
 ## Adding a New Agent
 

@@ -30,14 +30,15 @@
     { "repo": "ttc-agent-tender", "dir": "Tender", "apply": "tender", "submodules": false }
   ],
   "optional_agents": [
-    { "repo": "ttc-agent-hr",        "dir": "HR",             "apply": "hr" },
-    { "repo": "ttc-agent-bwbm",      "dir": "BwBm",           "apply": "bwbm" },
-    { "repo": "ttc-agent-pptx",      "dir": "PPTX",           "apply": "pptx" },
-    { "repo": "ttc-agent-odoo",      "dir": "Odoo",           "apply": "odoo" },
-    { "repo": "ttc-agent-contracts", "dir": "Contracts",      "apply": "contracts" },
-    { "repo": "ttc-agent-finance",   "dir": "Finance",        "apply": "finance" },
-    { "repo": "ttc-agent-personal",  "dir": "Personal",       "apply": "personal" },
-    { "repo": "ttc-agent-private",   "dir": "Private",        "apply": "private" },
-    { "repo": "ttc-agent-infra",     "dir": "Infrastructure", "apply": "infra" }
+    { "repo": "ttc-agent-hr",        "dir": "HR",                "apply": "hr" },
+    { "repo": "ttc-agent-bwbm",      "dir": "BwBm",              "apply": "bwbm" },
+    { "repo": "ttc-agent-pptx",      "dir": "PPTX",              "apply": "pptx" },
+    { "repo": "ttc-agent-odoo",      "dir": "Odoo",              "apply": "odoo" },
+    { "repo": "ttc-agent-contracts", "dir": "Contracts",         "apply": "contracts" },
+    { "repo": "ttc-agent-finance",   "dir": "Finance",           "apply": "finance" },
+    { "repo": "ttc-agent-tom",       "dir": "QA_TOM_Generator",  "apply": "tom" },
+    { "repo": "ttc-agent-personal",  "dir": "Personal",          "apply": "personal" },
+    { "repo": "ttc-agent-private",   "dir": "Private",           "apply": "private" },
+    { "repo": "ttc-agent-infra",     "dir": "Infrastructure",    "apply": "infra" }
   ]
 }
