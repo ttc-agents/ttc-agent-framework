@@ -12,7 +12,10 @@
       iwr https://raw.githubusercontent.com/ttc-agents/ttc-agent-framework/main/install.ps1 | iex
 #>
 
-$ErrorActionPreference = "Stop"
+# "Continue" - PS 5.1 treats native-command stderr as an error under "Stop",
+# which breaks git pull / gh clone / winget install whose progress messages
+# are written to stderr. We check $LASTEXITCODE explicitly where it matters.
+$ErrorActionPreference = "Continue"
 
 $GitHubOrg     = "ttc-agents"
 $FrameworkRepo = "ttc-agent-framework"

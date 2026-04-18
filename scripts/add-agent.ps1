@@ -12,7 +12,7 @@ param(
     [string]$Name
 )
 
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = "Continue"
 
 $FrameworkDir = Split-Path -Parent $PSScriptRoot
 $Config       = Join-Path $FrameworkDir "install-config.json"
