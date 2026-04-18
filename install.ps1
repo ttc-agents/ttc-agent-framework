@@ -81,8 +81,10 @@ gh auth status 2>$null | Out-Null
 if ($LASTEXITCODE -eq 0) {
     Write-Host "  [skip] gh already authenticated"
 } else {
-    Warn "gh is not authenticated. Launching interactive login..."
-    gh auth login
+    Warn "gh is not authenticated. Starting device-flow login..."
+    Write-Host "  A short one-time code will be displayed."
+    Write-Host "  Open https://github.com/login/device in any browser and paste the code."
+    gh auth login --hostname github.com --git-protocol https --web
 }
 Ok "GitHub ready"
 

@@ -84,8 +84,10 @@ log "Step 3/7: GitHub authentication"
 if gh auth status >/dev/null 2>&1; then
     echo "  [skip] gh already authenticated"
 else
-    warn "gh is not authenticated. Launching interactive login..."
-    gh auth login
+    warn "gh is not authenticated. Starting device-flow login..."
+    echo "  A short one-time code will be displayed."
+    echo "  Open https://github.com/login/device in any browser and paste the code."
+    gh auth login --hostname github.com --git-protocol https --web
 fi
 ok "GitHub ready"
 

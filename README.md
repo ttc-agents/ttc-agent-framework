@@ -2,6 +2,31 @@
 
 A reusable skeleton for building a Claude Code multi-agent system. Create specialised AI agents that share a common infrastructure for scheduling, syncing, and launching.
 
+## For Team Members — Onboarding
+
+Ask the repo owner to grant you **read access** on the agent repos you need (e.g. `ttc-agent-tender`, `ttc-agent-taf`, `ttc-agent-test`, `ttc-agent-sap`). Then open a terminal on your own workstation and paste **one line**:
+
+**Windows (PowerShell):**
+```powershell
+iwr https://raw.githubusercontent.com/ttc-agents/ttc-agent-framework/main/install.ps1 | iex
+```
+
+**Mac/Linux:**
+```bash
+curl -fsSL https://raw.githubusercontent.com/ttc-agents/ttc-agent-framework/main/install.sh | bash
+```
+
+The installer takes about 5 minutes. It installs prerequisites (`git`, `gh`, `node`, `python`, `1Password CLI`), Claude Code itself, clones the framework, and clones the four base agents you have access to: **SAP**, **Test**, **TAF**, **Tender**.
+
+During install, you'll see a one-time device code. Open https://github.com/login/device in any browser, paste the code, and sign in with your GitHub account — that authorises the installer to clone the private agent repos.
+
+When it finishes:
+1. Run `claude` once to authenticate with Anthropic.
+2. Inside Claude Code, type `apply tender` (or `apply taf` / `apply test` / `apply sap`).
+
+Full guides: [docs/install-mac.md](docs/install-mac.md) · [docs/install-windows.md](docs/install-windows.md)
+
+
 ## What's Included
 
 | Directory | Purpose |
