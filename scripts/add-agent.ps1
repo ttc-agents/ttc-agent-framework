@@ -22,6 +22,7 @@ $DirMap = @{
     "sap"="SAP"; "test"="Test"; "taf"="TAF"; "tender"="Tender"
     "hr"="HR"; "bwbm"="BwBm"; "pptx"="PPTX"; "odoo"="Odoo"
     "contracts"="Contracts"; "finance"="Finance"; "personal"="Personal"
+    "personal-template"="Personal"
     "private"="Private"; "infra"="Infrastructure"; "tom"="QA_TOM_Generator"
 }
 

@@ -36,8 +36,9 @@
     { "repo": "ttc-agent-odoo",      "dir": "Odoo",              "apply": "odoo" },
     { "repo": "ttc-agent-contracts", "dir": "Contracts",         "apply": "contracts" },
     { "repo": "ttc-agent-finance",   "dir": "Finance",           "apply": "finance" },
-    { "repo": "ttc-agent-tom",       "dir": "QA_TOM_Generator",  "apply": "tom" },
-    { "repo": "ttc-agent-personal",  "dir": "Personal",          "apply": "personal" },
+    { "repo": "ttc-agent-tom",               "dir": "QA_TOM_Generator",  "apply": "tom" },
+    { "repo": "ttc-agent-personal-template", "dir": "Personal",          "apply": "personal", "note": "Public sanitized template - safe to distribute" },
+    { "repo": "ttc-agent-personal",          "dir": "Personal",          "apply": "personal", "note": "Private - owner only" },
     { "repo": "ttc-agent-private",   "dir": "Private",           "apply": "private" },
     { "repo": "ttc-agent-infra",     "dir": "Infrastructure",    "apply": "infra" }
   ]

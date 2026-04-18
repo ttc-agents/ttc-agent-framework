@@ -64,7 +64,9 @@ Full guides: [docs/install-mac.md](docs/install-mac.md) · [docs/install-windows
 & "$env:USERPROFILE\AI-Vault\ttc-agent-framework\scripts\add-agent.ps1" <name>
 ```
 
-Available: `hr`, `bwbm`, `pptx`, `odoo`, `contracts`, `finance`, `tom`, `personal`, `private`, `infra`.
+Available: `hr`, `bwbm`, `pptx`, `odoo`, `contracts`, `finance`, `tom`, `personal-template`, `personal`, `private`, `infra`.
+
+`personal-template` clones the **public, sanitized** Personal Assistant starter — the right choice for team members setting up their own Head Agent. `personal` clones the **private** Personal repo (owner-only).
 
 ## Adding a New Agent
 
