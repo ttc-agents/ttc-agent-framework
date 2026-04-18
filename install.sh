@@ -99,9 +99,8 @@ ok "Framework at $FRAMEWORK_DIR"
 log "Step 5/6: Discovering agents you have access to"
 
 ACCESSIBLE_FILE=$(mktemp)
-gh api --paginate "/user/repos" --jq \
-    ".[] | select(.owner.login==\"$GITHUB_ORG\" and (.name | startswith(\"ttc-agent-\"))) | .name" \
-    2>/dev/null | sort -u > "$ACCESSIBLE_FILE"
+gh repo list "$GITHUB_ORG" --limit 200 --json name --jq '.[].name' 2>/dev/null \
+    | grep '^ttc-agent-' | sort -u > "$ACCESSIBLE_FILE"
 
 ACCESSIBLE_COUNT=$(wc -l < "$ACCESSIBLE_FILE" | tr -d ' ')
 echo "  Found $ACCESSIBLE_COUNT accessible ttc-agent-* repo(s)."

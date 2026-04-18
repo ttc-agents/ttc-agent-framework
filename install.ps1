@@ -104,16 +104,18 @@ Ok "Framework at $FrameworkDir"
 # --- 5. Discover + install every accessible agent ---------------------------
 Log "Step 5/6: Discovering agents you have access to"
 
-$accessibleJson = "[]"
+$accessible = @()
 $prevEAP = $ErrorActionPreference
 $ErrorActionPreference = "SilentlyContinue"
 try {
-    $accessibleJson = gh api --paginate "/user/repos" --jq "[.[] | select(.owner.login==`"$GitHubOrg`" and (.name | startswith(`"ttc-agent-`"))) | .name]" 2>&1
-    if (-not $accessibleJson -or $accessibleJson -match "^gh :") { $accessibleJson = "[]" }
+    $repoListJson = gh repo list $GitHubOrg --limit 200 --json name 2>&1 | Out-String
+    if ($LASTEXITCODE -eq 0 -and $repoListJson.Trim()) {
+        $parsed = $repoListJson | ConvertFrom-Json
+        $accessible = @($parsed | ForEach-Object { $_.name } | Where-Object { $_ -like 'ttc-agent-*' } | Sort-Object -Unique)
+    }
 } finally {
     $ErrorActionPreference = $prevEAP
 }
-$accessible = @($accessibleJson | ConvertFrom-Json) | Sort-Object -Unique
 Write-Host "  Found $($accessible.Count) accessible ttc-agent-* repo(s)."
 
 $config  = Get-Content (Join-Path $FrameworkDir "install-config.json") -Raw | ConvertFrom-Json
