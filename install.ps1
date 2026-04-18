@@ -1,11 +1,11 @@
-<#
+﻿<#
 .SYNOPSIS
-    TTC Agent Framework — One-command installer (Windows)
+    TTC Agent Framework - One-command installer (Windows)
 
 .DESCRIPTION
     Installs prerequisites (Git, GitHub CLI, Node, Python, 1Password CLI),
     Claude Code, the framework, and the standard bundle of 4 work agents
-    (SAP, Test, TAF, Tender). Idempotent — safe to re-run.
+    (SAP, Test, TAF, Tender). Idempotent - safe to re-run.
 
 .NOTES
     One-liner install:
@@ -35,7 +35,7 @@ function Err   ($msg) { Write-Host "[err] $msg" -ForegroundColor Red }
 function Has   ($cmd) { [bool](Get-Command $cmd -ErrorAction SilentlyContinue) }
 
 Write-Host ""
-Write-Host "=== TTC Agent Framework — Install (Windows) ===" -ForegroundColor Cyan
+Write-Host "=== TTC Agent Framework - Install (Windows) ===" -ForegroundColor Cyan
 Write-Host "Install root: $InstallRoot"
 Write-Host ""
 
@@ -63,8 +63,7 @@ foreach ($pkg in $Packages) {
     }
 }
 # Refresh PATH in current session so newly-installed tools are visible
-$env:Path = [Environment]::GetEnvironmentVariable("Path","Machine") + ";" +
-            [Environment]::GetEnvironmentVariable("Path","User")
+$machinePath = [Environment]::GetEnvironmentVariable("Path","Machine"); $userPath = [Environment]::GetEnvironmentVariable("Path","User"); $env:Path = "$machinePath;$userPath"
 Ok "Prerequisites ready"
 
 # --- 2. Claude Code ----------------------------------------------------------
@@ -91,7 +90,7 @@ Ok "GitHub ready"
 Log "Step 4/7: Cloning framework"
 if (-not (Test-Path $InstallRoot)) { New-Item -ItemType Directory -Path $InstallRoot -Force | Out-Null }
 if (Test-Path (Join-Path $FrameworkDir ".git")) {
-    Write-Host "  [skip] framework already cloned — pulling latest"
+    Write-Host "  [skip] framework already cloned - pulling latest"
     git -C $FrameworkDir pull --ff-only 2>&1 | Out-Null
 } else {
     gh repo clone "$GitHubOrg/$FrameworkRepo" $FrameworkDir
@@ -108,7 +107,7 @@ foreach ($agent in $BaseAgents) {
     Log "  Agent: $($agent.Apply) ($($agent.Repo))"
 
     if (Test-Path (Join-Path $target ".git")) {
-        Write-Host "    [skip] already cloned — pulling latest"
+        Write-Host "    [skip] already cloned - pulling latest"
         git -C $target pull --ff-only 2>&1 | Out-Null
         if ($agent.Submodules) {
             git -C $target submodule update --init --recursive 2>&1 | Out-Null
@@ -127,7 +126,7 @@ foreach ($agent in $BaseAgents) {
         try { & $installPs1 } catch { Warn "    $($agent.Apply) install.ps1 failed: $_" }
         Pop-Location
     } else {
-        Write-Host "    [info] no install.ps1 — clone only"
+        Write-Host "    [info] no install.ps1 - clone only"
     }
 }
 Ok "Base bundle installed"
@@ -154,9 +153,9 @@ if (Test-Path $ClaudeMd) {
         Set-Content -Path $ClaudeMd -Value $content -Encoding UTF8
         Ok "Created $ClaudeMd from template"
     } else {
-        Warn "Template not found — writing minimal CLAUDE.md"
+        Warn "Template not found - writing minimal CLAUDE.md"
         $lines = @(
-            "# Claude Code — Agent Routing",
+            "# Claude Code - Agent Routing",
             "",
             "When the user says **`"apply <agent>`"**, read the matching system prompt and adopt it fully.",
             "",
@@ -175,7 +174,7 @@ Ok "CLAUDE.md configured"
 Log "Step 7/7: Minimal MCP config"
 $McpJson = Join-Path $env:USERPROFILE ".claude.json"
 if (Test-Path $McpJson) {
-    Write-Host "  [skip] $McpJson exists — not touching"
+    Write-Host "  [skip] $McpJson exists - not touching"
 } else {
     $fsRoot = $InstallRoot -replace '\\','/'
     $mcp = @{

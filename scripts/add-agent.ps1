@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Install a single TTC agent by name (Windows).
 
@@ -39,7 +39,7 @@ $Target = Join-Path $AgentsDir $Dir
 if (-not (Test-Path $AgentsDir)) { New-Item -ItemType Directory -Path $AgentsDir -Force | Out-Null }
 
 if (Test-Path (Join-Path $Target ".git")) {
-    Write-Host "[skip] $Repo already cloned — pulling latest"
+    Write-Host "[skip] $Repo already cloned - pulling latest"
     git -C $Target pull --ff-only 2>&1 | Out-Null
 } else {
     Write-Host "[clone] $GitHubOrg/$Repo -> $Target"
@@ -56,7 +56,7 @@ if (Test-Path $installPs1) {
     Push-Location $Target
     try { & $installPs1 } finally { Pop-Location }
 } else {
-    Write-Host "[info] no install.ps1 in $Repo — clone only"
+    Write-Host "[info] no install.ps1 in $Repo - clone only"
 }
 
 $line = "| ``apply $key`` | ``$((Join-Path $Target 'system-prompt.md') -replace '\\','/')`` |"
@@ -69,7 +69,7 @@ if (Test-Path $ClaudeMd) {
         Write-Host "[add]  apply $key -> $ClaudeMd"
     }
 } else {
-    Set-Content -Path $ClaudeMd -Value "# Claude Code — Agent Routing`n`n| Command | System Prompt File |`n|---|---|`n$line" -Encoding UTF8
+    Set-Content -Path $ClaudeMd -Value "# Claude Code - Agent Routing`n`n| Command | System Prompt File |`n|---|---|`n$line" -Encoding UTF8
     Write-Host "[create] $ClaudeMd with apply $key"
 }
 
