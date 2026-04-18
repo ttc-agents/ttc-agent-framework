@@ -101,18 +101,20 @@ curl -fsSL https://raw.githubusercontent.com/ttc-agents/ttc-agent-framework/main
 
 ### On Windows
 
-1. Click the **Start** menu, type **PowerShell**, and open **Windows PowerShell**.
+1. Click the **Start** menu, type **PowerShell**, **right-click "Windows PowerShell"** and choose **"Run as administrator"**. Running as admin avoids repeated User Account Control pop-ups and lets the installer do its work without interruption.
 2. Copy the line below and paste it into the PowerShell window (right-click to paste), then press Enter:
 
 ```powershell
 iwr https://raw.githubusercontent.com/ttc-agents/ttc-agent-framework/main/install.ps1 | iex
 ```
 
-3. It will install Git, GitHub CLI, Node.js, Python and the 1Password CLI using the built-in Windows package manager (`winget`). You may see a couple of user-account-control pop-ups — click **Yes**.
-4. When it asks for GitHub authentication, copy the 8-character code, open **https://github.com/login/device** in any browser, paste the code, and sign in with your GitHub account.
-5. **Known quirk on Windows:** after GitHub authentication succeeds, the installer sometimes stops or shows an error instead of continuing. If that happens:
+3. **Windows security will ask for permission** a few times while the installer runs — this is normal. Whenever Windows (User Account Control) asks whether you want to allow an installer to make changes to your device, click **Yes**.
+4. **If PowerShell asks "Do you want to run software from this untrusted publisher?"** or any similar confirmation with a list of choices like `[Y] Yes  [A] Yes to All  [N] No  [L] No to All`, type **`A`** and press Enter. This confirms all script-based steps in one go. If a plain `[Y]/[N]` prompt appears, answer `Y`.
+5. The installer will install Git, GitHub CLI, Node.js, Python and the 1Password CLI using the built-in Windows package manager (`winget`).
+6. When it asks for GitHub authentication, copy the 8-character code, open **https://github.com/login/device** in any browser, paste the code, and sign in with your GitHub account.
+7. **Known quirk on Windows:** after GitHub authentication succeeds, the installer sometimes stops or shows an error instead of continuing. If that happens:
     - Close the PowerShell window.
-    - Open a **new** PowerShell window.
+    - Open a **new** PowerShell window (again right-click "Run as administrator").
     - Paste and run the same one-line command again:
 
     ```powershell
@@ -120,7 +122,7 @@ iwr https://raw.githubusercontent.com/ttc-agents/ttc-agent-framework/main/instal
     ```
 
     The installer is designed to be run again — it skips whatever is already done and picks up where it stopped. The second run usually finishes without any further interaction because you are already authenticated with GitHub.
-6. When you see `=== Install complete ===` the setup is done.
+8. When you see `=== Install complete ===` the setup is done.
 
 ### What the installer does, in plain language
 
