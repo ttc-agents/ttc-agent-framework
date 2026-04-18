@@ -4,8 +4,8 @@
 # Usage (fresh machine):
 #   curl -fsSL https://raw.githubusercontent.com/ttc-agents/ttc-agent-framework/main/install.sh | bash
 #
-# Installs prerequisites, Claude Code, the framework, and the standard bundle
-# of 4 work agents (SAP, Test, TAF, Tender). Idempotent — safe to re-run.
+# Installs prerequisites, Claude Code, the framework, and every TTC agent
+# the authenticated GitHub user has read access to. Idempotent — safe to re-run.
 
 set -euo pipefail
 
@@ -15,13 +15,6 @@ INSTALL_ROOT="${TTC_INSTALL_ROOT:-$HOME/AI-Vault}"
 FRAMEWORK_DIR="$INSTALL_ROOT/$FRAMEWORK_REPO"
 AGENTS_DIR="$INSTALL_ROOT/Agents"
 CLAUDE_MD="$HOME/CLAUDE.md"
-
-BASE_AGENTS=(
-    "ttc-agent-sap:SAP:sap:submodules"
-    "ttc-agent-test:Test:test:-"
-    "ttc-agent-taf:TAF:taf:-"
-    "ttc-agent-tender:Tender:tender:-"
-)
 
 log()  { printf "\033[0;36m[install]\033[0m %s\n" "$*"; }
 ok()   { printf "\033[0;32m[ok]\033[0m %s\n" "$*"; }
@@ -36,7 +29,7 @@ echo "Install root: $INSTALL_ROOT"
 echo ""
 
 # --- 1. Prerequisites ---------------------------------------------------------
-log "Step 1/7: Checking prerequisites"
+log "Step 1/6: Checking prerequisites"
 
 if [[ "$(uname -s)" == "Darwin" ]]; then
     if ! require_cmd brew; then
@@ -71,7 +64,7 @@ fi
 ok "Prerequisites ready"
 
 # --- 2. Claude Code -----------------------------------------------------------
-log "Step 2/7: Installing Claude Code"
+log "Step 2/6: Installing Claude Code"
 if require_cmd claude; then
     echo "  [skip] claude already on PATH ($(claude --version 2>/dev/null || echo installed))"
 else
@@ -80,7 +73,7 @@ fi
 ok "Claude Code ready"
 
 # --- 3. GitHub auth -----------------------------------------------------------
-log "Step 3/7: GitHub authentication"
+log "Step 3/6: GitHub authentication"
 if gh auth status >/dev/null 2>&1; then
     echo "  [skip] gh already authenticated"
 else
@@ -92,7 +85,7 @@ fi
 ok "GitHub ready"
 
 # --- 4. Clone framework -------------------------------------------------------
-log "Step 4/7: Cloning framework"
+log "Step 4/6: Cloning framework"
 mkdir -p "$INSTALL_ROOT"
 if [[ -d "$FRAMEWORK_DIR/.git" ]]; then
     echo "  [skip] framework already cloned — pulling latest"
@@ -102,75 +95,112 @@ else
 fi
 ok "Framework at $FRAMEWORK_DIR"
 
-# --- 5. Install base bundle ---------------------------------------------------
-log "Step 5/7: Installing base agent bundle"
+# --- 5. Discover + install every accessible agent ----------------------------
+log "Step 5/6: Discovering agents you have access to"
+
+ACCESSIBLE_FILE=$(mktemp)
+gh api --paginate "/user/repos" --jq \
+    ".[] | select(.owner.login==\"$GITHUB_ORG\" and (.name | startswith(\"ttc-agent-\"))) | .name" \
+    2>/dev/null | sort -u > "$ACCESSIBLE_FILE"
+
+ACCESSIBLE_COUNT=$(wc -l < "$ACCESSIBLE_FILE" | tr -d ' ')
+echo "  Found $ACCESSIBLE_COUNT accessible ttc-agent-* repo(s)."
+
+INSTALL_LIST=$(python3 - "$FRAMEWORK_DIR/install-config.json" "$ACCESSIBLE_FILE" <<'PYEOF'
+import json, sys
+cfg_path, accessible_path = sys.argv[1], sys.argv[2]
+with open(cfg_path) as f:
+    cfg = json.load(f)
+with open(accessible_path) as f:
+    accessible = {line.strip() for line in f if line.strip()}
+skip = set(cfg.get("skip_repos", []))
+seen_dirs = set()
+for agent in cfg.get("agents", []):
+    repo = agent["repo"]
+    if repo not in accessible:
+        continue
+    if repo in skip:
+        continue
+    if not agent.get("auto_install", True):
+        continue
+    if agent["dir"] in seen_dirs:
+        continue
+    seen_dirs.add(agent["dir"])
+    sub = "true" if agent.get("submodules", False) else "false"
+    print(f"{repo}\t{agent['dir']}\t{agent['apply']}\t{sub}")
+PYEOF
+)
+rm -f "$ACCESSIBLE_FILE"
+
+if [[ -z "$INSTALL_LIST" ]]; then
+    warn "No accessible agent repos found. Ask the org owner to grant you team access, then re-run."
+else
+    INSTALL_N=$(echo "$INSTALL_LIST" | wc -l | tr -d ' ')
+    ok "$INSTALL_N agent(s) will be installed"
+fi
+
 mkdir -p "$AGENTS_DIR"
-for entry in "${BASE_AGENTS[@]}"; do
-    IFS=':' read -r REPO DIR APPLY FLAGS <<< "$entry"
+INSTALLED_AGENTS=()
+while IFS=$'\t' read -r REPO DIR APPLY FLAGS; do
+    [[ -z "$REPO" ]] && continue
     TARGET="$AGENTS_DIR/$DIR"
     echo ""
     log "  Agent: $APPLY ($REPO)"
     if [[ -d "$TARGET/.git" ]]; then
-        echo "    [skip] already cloned — pulling latest"
-        git -C "$TARGET" pull --ff-only || warn "    pull failed"
-        if [[ "$FLAGS" == "submodules" ]]; then
-            git -C "$TARGET" submodule update --init --recursive || warn "    submodule update failed"
+        echo "    [skip] already cloned - pulling latest"
+        git -C "$TARGET" pull --ff-only 2>/dev/null || warn "    pull failed"
+        if [[ "$FLAGS" == "true" ]]; then
+            git -C "$TARGET" submodule update --init --recursive 2>/dev/null || warn "    submodule update failed"
         fi
     else
-        if [[ "$FLAGS" == "submodules" ]]; then
+        if [[ "$FLAGS" == "true" ]]; then
             gh repo clone "$GITHUB_ORG/$REPO" "$TARGET" -- --recurse-submodules
         else
             gh repo clone "$GITHUB_ORG/$REPO" "$TARGET"
         fi
     fi
-    if [[ -x "$TARGET/install.sh" ]]; then
-        (cd "$TARGET" && ./install.sh) || warn "    $APPLY install.sh exited non-zero"
-    elif [[ -f "$TARGET/install.sh" ]]; then
+    if [[ -f "$TARGET/install.sh" ]]; then
         (cd "$TARGET" && bash install.sh) || warn "    $APPLY install.sh exited non-zero"
     else
-        echo "    [info] no install.sh — clone only"
+        echo "    [info] no install.sh - clone only"
     fi
-done
-ok "Base bundle installed"
+    INSTALLED_AGENTS+=("$APPLY:$DIR")
+done <<< "$INSTALL_LIST"
+ok "Agents installed: ${#INSTALLED_AGENTS[@]}"
 
-# --- 6. Write ~/CLAUDE.md -----------------------------------------------------
-log "Step 6/7: Configuring ~/CLAUDE.md"
-if [[ -f "$CLAUDE_MD" ]]; then
-    for entry in "${BASE_AGENTS[@]}"; do
-        IFS=':' read -r REPO DIR APPLY FLAGS <<< "$entry"
-        LINE="| \`apply $APPLY\` | \`$AGENTS_DIR/$DIR/system-prompt.md\` |"
-        if grep -qE "^\| \`apply $APPLY\`" "$CLAUDE_MD"; then
-            echo "  [skip] apply $APPLY already registered"
-        else
-            echo "$LINE" >> "$CLAUDE_MD"
-            echo "  [add]  apply $APPLY"
-        fi
-    done
-else
+# --- 6. Configure ~/CLAUDE.md -------------------------------------------------
+log "Step 6/6: Configuring ~/CLAUDE.md"
+if [[ ! -f "$CLAUDE_MD" ]]; then
     TEMPLATE="$FRAMEWORK_DIR/CLAUDE.md.template"
     if [[ -f "$TEMPLATE" ]]; then
         sed "s|{{AGENTS_DIR}}|$AGENTS_DIR|g" "$TEMPLATE" > "$CLAUDE_MD"
         ok "Created $CLAUDE_MD from template"
     else
-        warn "Template not found — writing minimal CLAUDE.md"
         {
-            echo "# Claude Code — Agent Routing"
+            echo "# Claude Code - Agent Routing"
             echo ""
             echo "When the user says **\"apply <agent>\"**, read the matching system prompt and adopt it fully."
             echo ""
             echo "| Command | System Prompt File |"
             echo "|---|---|"
-            for entry in "${BASE_AGENTS[@]}"; do
-                IFS=':' read -r REPO DIR APPLY FLAGS <<< "$entry"
-                echo "| \`apply $APPLY\` | \`$AGENTS_DIR/$DIR/system-prompt.md\` |"
-            done
         } > "$CLAUDE_MD"
     fi
 fi
+
+for entry in "${INSTALLED_AGENTS[@]}"; do
+    IFS=':' read -r APPLY DIR <<< "$entry"
+    LINE="| \`apply $APPLY\` | \`$AGENTS_DIR/$DIR/system-prompt.md\` |"
+    if grep -qE "^\| \`apply $APPLY\`" "$CLAUDE_MD"; then
+        echo "  [skip] apply $APPLY already registered"
+    else
+        echo "$LINE" >> "$CLAUDE_MD"
+        echo "  [add]  apply $APPLY"
+    fi
+done
 ok "~/CLAUDE.md configured"
 
 # --- 7. Minimal MCP config ----------------------------------------------------
-log "Step 7/7: Minimal MCP config"
+log "Minimal MCP config"
 MCP_JSON="$HOME/.claude.json"
 if [[ -f "$MCP_JSON" ]]; then
     echo "  [skip] $MCP_JSON exists — not touching"
@@ -198,7 +228,11 @@ echo "  CLAUDE.md:    $CLAUDE_MD"
 echo ""
 echo "Next steps:"
 echo "  1. Run 'claude' to authenticate Claude Code"
-echo "  2. Inside Claude Code, try: apply sap | apply test | apply taf | apply tender"
-echo "  3. Add more agents any time:"
+echo "  2. Inside Claude Code, type one of your installed agents:"
+for entry in "${INSTALLED_AGENTS[@]:-}"; do
+    IFS=':' read -r APPLY DIR <<< "$entry"
+    [[ -n "$APPLY" ]] && echo "       apply $APPLY"
+done
+echo "  3. To add more agents later (e.g. if you get access to a new one):"
 echo "       $FRAMEWORK_DIR/scripts/add-agent.sh <name>"
 echo ""

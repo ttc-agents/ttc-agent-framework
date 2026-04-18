@@ -23,23 +23,29 @@
   "claude_code": {
     "install_cmd": "npm install -g @anthropic-ai/claude-code"
   },
-  "standard_bundle": [
-    { "repo": "ttc-agent-sap",    "dir": "SAP",    "apply": "sap",    "submodules": true  },
-    { "repo": "ttc-agent-test",   "dir": "Test",   "apply": "test",   "submodules": false },
-    { "repo": "ttc-agent-taf",    "dir": "TAF",    "apply": "taf",    "submodules": false },
-    { "repo": "ttc-agent-tender", "dir": "Tender", "apply": "tender", "submodules": false }
+  "skip_repos": [
+    "ttc-agent-framework",
+    "ttc-agent-claude-config"
   ],
-  "optional_agents": [
-    { "repo": "ttc-agent-hr",        "dir": "HR",                "apply": "hr" },
-    { "repo": "ttc-agent-bwbm",      "dir": "BwBm",              "apply": "bwbm" },
-    { "repo": "ttc-agent-pptx",      "dir": "PPTX",              "apply": "pptx" },
-    { "repo": "ttc-agent-odoo",      "dir": "Odoo",              "apply": "odoo" },
-    { "repo": "ttc-agent-contracts", "dir": "Contracts",         "apply": "contracts" },
-    { "repo": "ttc-agent-finance",   "dir": "Finance",           "apply": "finance" },
-    { "repo": "ttc-agent-tom",               "dir": "QA_TOM_Generator",  "apply": "tom" },
-    { "repo": "ttc-agent-personal-template", "dir": "Personal",          "apply": "personal", "note": "Public sanitized template - safe to distribute" },
-    { "repo": "ttc-agent-personal",          "dir": "Personal",          "apply": "personal", "note": "Private - owner only" },
-    { "repo": "ttc-agent-private",   "dir": "Private",           "apply": "private" },
-    { "repo": "ttc-agent-infra",     "dir": "Infrastructure",    "apply": "infra" }
+  "agents": [
+    { "repo": "ttc-agent-sap",               "dir": "SAP",               "apply": "sap",            "submodules": true,  "auto_install": true  },
+    { "repo": "ttc-agent-test",              "dir": "Test",              "apply": "test",           "submodules": false, "auto_install": true  },
+    { "repo": "ttc-agent-taf",               "dir": "TAF",               "apply": "taf",            "submodules": false, "auto_install": true  },
+    { "repo": "ttc-agent-tender",            "dir": "Tender",            "apply": "tender",         "submodules": false, "auto_install": true  },
+    { "repo": "ttc-agent-hr",                "dir": "HR",                "apply": "hr",             "submodules": false, "auto_install": true  },
+    { "repo": "ttc-agent-bwbm",              "dir": "BwBm",              "apply": "bwbm",           "submodules": false, "auto_install": true  },
+    { "repo": "ttc-agent-pptx",              "dir": "PPTX",              "apply": "pptx",           "submodules": false, "auto_install": true  },
+    { "repo": "ttc-agent-odoo",              "dir": "Odoo",              "apply": "odoo",           "submodules": false, "auto_install": true  },
+    { "repo": "ttc-agent-contracts",         "dir": "Contracts",         "apply": "contracts",      "submodules": false, "auto_install": true  },
+    { "repo": "ttc-agent-finance",           "dir": "Finance",           "apply": "finance",        "submodules": false, "auto_install": true  },
+    { "repo": "ttc-agent-tom",               "dir": "QA_TOM_Generator",  "apply": "tom",            "submodules": false, "auto_install": true  },
+    { "repo": "ttc-agent-personal",          "dir": "Personal",          "apply": "personal",       "submodules": false, "auto_install": true,  "note": "Private: owner-only" },
+    { "repo": "ttc-agent-personal-template", "dir": "Personal",          "apply": "personal",       "submodules": false, "auto_install": false, "note": "Sanitized template. Conflicts with ttc-agent-personal. Install via: add-agent personal-template" },
+    { "repo": "ttc-agent-private",           "dir": "Private",           "apply": "private",        "submodules": false, "auto_install": true  },
+    { "repo": "ttc-agent-infra",             "dir": "Infrastructure",    "apply": "infra",          "submodules": false, "auto_install": true  },
+    { "repo": "ttc-agent-trading",           "dir": "Trading",           "apply": "trading",        "submodules": false, "auto_install": true  },
+    { "repo": "ttc-agent-trading-hf",        "dir": "Trading-HF",        "apply": "trading-hf",     "submodules": false, "auto_install": true  },
+    { "repo": "ttc-agent-trading-ibkr",      "dir": "Trading-IBKR",      "apply": "trading-ibkr",   "submodules": false, "auto_install": true  },
+    { "repo": "ttc-agent-control-review",    "dir": "Control-Review",    "apply": "control-review", "submodules": false, "auto_install": true  }
   ]
 }

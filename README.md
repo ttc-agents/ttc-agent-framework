@@ -50,7 +50,7 @@ curl -fsSL https://raw.githubusercontent.com/ttc-agents/ttc-agent-framework/main
 iwr https://raw.githubusercontent.com/ttc-agents/ttc-agent-framework/main/install.ps1 | iex
 ```
 
-Installs prerequisites, Claude Code, the framework, and the standard base bundle (**SAP, Test, TAF, Tender**). Trading agents are personal-only and not included.
+Installs prerequisites, Claude Code, the framework, and **every agent the authenticated GitHub user has read access to**. What you get depends on which GitHub teams you're in — a pre-sales consultant gets Tender, TOM, PPTX, Test, SAP automatically; a test engineer gets Test, TAF, PPTX. Trading agents are personal-only and stay on the owner's machines.
 
 Full guides: [docs/install-mac.md](docs/install-mac.md) · [docs/install-windows.md](docs/install-windows.md)
 
