@@ -70,8 +70,17 @@ Ok "Claude Code ready"
 
 # --- 3. GitHub auth ----------------------------------------------------------
 Log "Step 3/6: GitHub authentication"
-gh auth status 2>$null | Out-Null
-if ($LASTEXITCODE -eq 0) {
+$ghAuthOk = $false
+$prevEAP = $ErrorActionPreference
+$ErrorActionPreference = "SilentlyContinue"
+try {
+    gh auth status 2>&1 | Out-Null
+    $ghAuthOk = ($LASTEXITCODE -eq 0)
+} finally {
+    $ErrorActionPreference = $prevEAP
+}
+
+if ($ghAuthOk) {
     Write-Host "  [skip] gh already authenticated"
 } else {
     Warn "gh is not authenticated. Starting device-flow login..."
@@ -95,8 +104,15 @@ Ok "Framework at $FrameworkDir"
 # --- 5. Discover + install every accessible agent ---------------------------
 Log "Step 5/6: Discovering agents you have access to"
 
-$accessibleJson = gh api --paginate "/user/repos" --jq "[.[] | select(.owner.login==`"$GitHubOrg`" and (.name | startswith(`"ttc-agent-`"))) | .name]" 2>$null
-if (-not $accessibleJson) { $accessibleJson = "[]" }
+$accessibleJson = "[]"
+$prevEAP = $ErrorActionPreference
+$ErrorActionPreference = "SilentlyContinue"
+try {
+    $accessibleJson = gh api --paginate "/user/repos" --jq "[.[] | select(.owner.login==`"$GitHubOrg`" and (.name | startswith(`"ttc-agent-`"))) | .name]" 2>&1
+    if (-not $accessibleJson -or $accessibleJson -match "^gh :") { $accessibleJson = "[]" }
+} finally {
+    $ErrorActionPreference = $prevEAP
+}
 $accessible = @($accessibleJson | ConvertFrom-Json) | Sort-Object -Unique
 Write-Host "  Found $($accessible.Count) accessible ttc-agent-* repo(s)."
 
