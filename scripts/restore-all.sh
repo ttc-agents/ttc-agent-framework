@@ -1,4 +1,8 @@
 #!/bin/bash
+# DEPRECATED — superseded by ../install.sh (fresh install) and scripts/add-agent.sh (per agent).
+# Kept for existing Mac Mini / MacBook Air setups that already depend on it.
+# New machines should use:
+#   curl -fsSL https://raw.githubusercontent.com/ttc-agents/ttc-agent-framework/main/install.sh | bash
 set -euo pipefail
 
 GITHUB_ORG="ttc-agents"

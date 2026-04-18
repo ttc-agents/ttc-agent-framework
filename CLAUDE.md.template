@@ -1,0 +1,25 @@
+# Claude Code — Agent Routing
+
+When the user says **"apply <agent>"** (e.g. "apply test"), immediately:
+1. Read the corresponding system prompt file from the table below
+2. Adopt that agent's persona, role, and instructions fully
+3. Follow the agent's session-start instructions
+
+| Command | System Prompt File |
+|---|---|
+| `apply sap`    | `{{AGENTS_DIR}}/SAP/system-prompt.md` |
+| `apply test`   | `{{AGENTS_DIR}}/Test/system-prompt.md` |
+| `apply taf`    | `{{AGENTS_DIR}}/TAF/system-prompt.md` |
+| `apply tender` | `{{AGENTS_DIR}}/Tender/system-prompt.md` |
+
+## Adding more agents
+
+```bash
+# macOS / Linux
+~/AI-Vault/ttc-agent-framework/scripts/add-agent.sh <name>
+
+# Windows (PowerShell)
+& $env:USERPROFILE\AI-Vault\ttc-agent-framework\scripts\add-agent.ps1 <name>
+```
+
+Available optional agents: `hr`, `bwbm`, `pptx`, `odoo`, `contracts`, `finance`, `personal`, `private`, `infra`.

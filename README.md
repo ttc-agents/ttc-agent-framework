@@ -13,11 +13,33 @@ A reusable skeleton for building a Claude Code multi-agent system. Create specia
 | `scripts/` | Utilities: 1Password MCP wrapper, Syncthing conflict monitor, restore-all |
 | `docs/` | Setup guides for Mac (and future Windows) |
 
-## Quick Start
+## Quick Start — One-Command Install
 
-1. See [docs/setup-guide-mac.md](docs/setup-guide-mac.md) for full installation steps
-2. Copy `CLAUDE.md.example` to `~/CLAUDE.md` and add your agents
-3. Create agents from `agent-template/`
+**macOS / Linux:**
+```bash
+curl -fsSL https://raw.githubusercontent.com/ttc-agents/ttc-agent-framework/main/install.sh | bash
+```
+
+**Windows (PowerShell):**
+```powershell
+iwr https://raw.githubusercontent.com/ttc-agents/ttc-agent-framework/main/install.ps1 | iex
+```
+
+Installs prerequisites, Claude Code, the framework, and the standard base bundle (**SAP, Test, TAF, Tender**). Trading agents are personal-only and not included.
+
+Full guides: [docs/install-mac.md](docs/install-mac.md) · [docs/install-windows.md](docs/install-windows.md)
+
+### Add more agents later
+
+```bash
+# macOS / Linux
+~/AI-Vault/ttc-agent-framework/scripts/add-agent.sh <name>
+
+# Windows
+& "$env:USERPROFILE\AI-Vault\ttc-agent-framework\scripts\add-agent.ps1" <name>
+```
+
+Available: `hr`, `bwbm`, `pptx`, `odoo`, `contracts`, `finance`, `personal`, `private`, `infra`.
 
 ## Adding a New Agent
 

@@ -1,0 +1,43 @@
+{
+  "github_org": "ttc-agents",
+  "install_root": {
+    "mac": "$HOME/AI-Vault",
+    "windows": "$env:USERPROFILE\\AI-Vault"
+  },
+  "prerequisites": {
+    "mac": {
+      "package_manager": "brew",
+      "packages": ["git", "gh", "node", "python@3.12", "1password-cli"]
+    },
+    "windows": {
+      "package_manager": "winget",
+      "packages": [
+        "Git.Git",
+        "GitHub.cli",
+        "OpenJS.NodeJS.LTS",
+        "Python.Python.3.12",
+        "1Password.CLI"
+      ]
+    }
+  },
+  "claude_code": {
+    "install_cmd": "npm install -g @anthropic-ai/claude-code"
+  },
+  "standard_bundle": [
+    { "repo": "ttc-agent-sap",    "dir": "SAP",    "apply": "sap",    "submodules": true  },
+    { "repo": "ttc-agent-test",   "dir": "Test",   "apply": "test",   "submodules": false },
+    { "repo": "ttc-agent-taf",    "dir": "TAF",    "apply": "taf",    "submodules": false },
+    { "repo": "ttc-agent-tender", "dir": "Tender", "apply": "tender", "submodules": false }
+  ],
+  "optional_agents": [
+    { "repo": "ttc-agent-hr",        "dir": "HR",             "apply": "hr" },
+    { "repo": "ttc-agent-bwbm",      "dir": "BwBm",           "apply": "bwbm" },
+    { "repo": "ttc-agent-pptx",      "dir": "PPTX",           "apply": "pptx" },
+    { "repo": "ttc-agent-odoo",      "dir": "Odoo",           "apply": "odoo" },
+    { "repo": "ttc-agent-contracts", "dir": "Contracts",      "apply": "contracts" },
+    { "repo": "ttc-agent-finance",   "dir": "Finance",        "apply": "finance" },
+    { "repo": "ttc-agent-personal",  "dir": "Personal",       "apply": "personal" },
+    { "repo": "ttc-agent-private",   "dir": "Private",        "apply": "private" },
+    { "repo": "ttc-agent-infra",     "dir": "Infrastructure", "apply": "infra" }
+  ]
+}
