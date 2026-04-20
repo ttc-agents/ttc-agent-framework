@@ -198,6 +198,38 @@ for entry in "${INSTALLED_AGENTS[@]}"; do
 done
 ok "~/CLAUDE.md configured"
 
+# --- 6b. Install KB framework (two-tier KB) ----------------------------------
+log "Step 6b/6: Installing KB framework (scripts + conventions)"
+KB_RUNTIME_DIR="$INSTALL_ROOT/Claude Folder"
+KB_SRC="$FRAMEWORK_DIR/scripts/kb"
+KB_DOCS_SRC="$FRAMEWORK_DIR/docs/KB_CONVENTIONS.md"
+mkdir -p "$KB_RUNTIME_DIR" "$INSTALL_ROOT/docs"
+if [[ -d "$KB_SRC" ]]; then
+    cp "$KB_SRC/kb_bootstrap_customer.sh"   "$KB_RUNTIME_DIR/"
+    cp "$KB_SRC/kb_refresh_customer.sh"     "$KB_RUNTIME_DIR/"
+    cp "$KB_SRC/convert_to_knowledge_base.py" "$KB_RUNTIME_DIR/"
+    cp "$KB_SRC/kb_vectorize.py"            "$KB_RUNTIME_DIR/"
+    chmod +x "$KB_RUNTIME_DIR/"kb_*.sh 2>/dev/null || true
+    ok "KB scripts deployed to $KB_RUNTIME_DIR/"
+fi
+if [[ -f "$KB_DOCS_SRC" ]]; then
+    cp "$KB_DOCS_SRC" "$INSTALL_ROOT/docs/KB_CONVENTIONS.md"
+    ok "KB_CONVENTIONS.md deployed to $INSTALL_ROOT/docs/"
+fi
+REGISTRY="$KB_RUNTIME_DIR/Knowledge Base/_customer_registry.json"
+if [[ ! -f "$REGISTRY" ]]; then
+    mkdir -p "$(dirname "$REGISTRY")"
+    cat > "$REGISTRY" <<'JSON'
+{
+  "schema_version": "1.0",
+  "last_updated": "",
+  "description": "Maps customers to their primary OneDrive folder and AI-INFO KB location. Edited by kb_bootstrap_customer.sh.",
+  "customers": {}
+}
+JSON
+    ok "Empty customer registry seeded at $REGISTRY"
+fi
+
 # --- 7. Minimal MCP config ----------------------------------------------------
 log "Minimal MCP config"
 MCP_JSON="$HOME/.claude.json"
