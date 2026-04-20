@@ -117,6 +117,12 @@ else
   echo "Exists       : $AI_INFO/  (idempotent update)"
 fi
 
+# Hide the folder from Finder (macOS); reversible with `chflags nohidden`.
+# Colleagues on Windows with "Show hidden items" enabled will still see it.
+if command -v chflags >/dev/null 2>&1; then
+  chflags hidden "$AI_INFO" 2>/dev/null || true
+fi
+
 TODAY=$(date +%Y-%m-%d)
 
 # README.md — overwrite protection

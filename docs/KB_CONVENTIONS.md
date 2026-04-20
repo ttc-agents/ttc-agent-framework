@@ -34,6 +34,8 @@ Last updated: 2026-04-20 | Owner: Joerg Pietzsch (Infrastructure Agent)
 
 **Why `AI-INFO - DO NOT DELETE`?** Name is deliberately awkward so nobody confuses it with deliverables or accidentally cleans it up. OneDrive restores deletions up to 93 days anyway.
 
+**Folder is hidden (macOS `chflags hidden`).** Reduces visual clutter in Finder for normal customer-folder browsing. To see it: `Cmd+Shift+.` in Finder, or `ls -a` in Terminal. Windows colleagues: enable "Show hidden items" in File Explorer. The bootstrap script applies the hidden flag automatically on creation; to unhide: `chflags nohidden "<path>"`.
+
 ---
 
 ## 2. Primary customer folder — selection rules
