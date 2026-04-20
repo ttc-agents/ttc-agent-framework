@@ -86,11 +86,29 @@ Every customer-facing agent must follow this table:
 
 ## 5. How an agent handles a new customer
 
-First time an agent works for customer X that isn't in the registry:
+### 5.1 Session-start discovery (automatic)
+Every customer-facing agent runs `kb_discover_customers.sh --quiet` at session start.
+It scans OneDrive for `AI-INFO - DO NOT DELETE/` folders and upserts any missing ones
+into the local `_customer_registry.json`. This is how colleagues' newly-published
+customer KBs appear on your machine without manual intervention.
 
-1. Run `kb_bootstrap_customer.sh "<Customer Name>"` — idempotent; creates the `AI-INFO` folder structure, adds to registry.
+Cost: ~1–2 seconds of filesystem walk. Silent when nothing changed.
+
+### 5.2 Brand-new customer (no AI-INFO anywhere yet)
+If **you** are the first person working on a customer:
+
+1. Run `kb_bootstrap_customer.sh "<Customer Name>"` — idempotent; creates the `AI-INFO` folder structure, adds to registry, applies the hidden flag.
 2. Continue the task — save drafts to `working/`, customer notes to the new `notes.md`.
 3. When ready, run `kb_refresh_customer.sh "<Customer Name>"` to build the vector index.
+
+### 5.3 Colleague's customer (AI-INFO exists in OneDrive, not yet in your registry)
+Session-start discovery picks it up automatically. If you want to be explicit,
+run bootstrap — it's idempotent and safely detects the existing folder:
+
+```bash
+kb_bootstrap_customer.sh "<Customer Name>"   # prints "Exists, no files overwritten"
+kb_refresh_customer.sh "<Customer Name>"     # builds your local vector index (seconds)
+```
 
 **Never create the `AI-INFO` folder manually** — always go through the bootstrap script so the registry stays in sync.
 

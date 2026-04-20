@@ -68,6 +68,8 @@ if [[ -d "$KB_SRC" ]]; then
     mkdir -p "$KB_RUNTIME_DIR" "$INSTALL_ROOT/docs"
     cp "$KB_SRC/kb_bootstrap_customer.sh"     "$KB_RUNTIME_DIR/"
     cp "$KB_SRC/kb_refresh_customer.sh"       "$KB_RUNTIME_DIR/"
+    cp "$KB_SRC/kb_discover_customers.sh"     "$KB_RUNTIME_DIR/"
+    cp "$KB_SRC/kb_discover_customers.py"     "$KB_RUNTIME_DIR/"
     cp "$KB_SRC/convert_to_knowledge_base.py" "$KB_RUNTIME_DIR/"
     cp "$KB_SRC/kb_vectorize.py"              "$KB_RUNTIME_DIR/"
     chmod +x "$KB_RUNTIME_DIR/"kb_*.sh 2>/dev/null || true

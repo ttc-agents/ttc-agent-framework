@@ -356,21 +356,28 @@ Inside each folder:
 
 The agents know the split — you don't have to think about it. Just tell them the customer name and they'll look in the right place.
 
-### Working with a new customer
+### Working with a customer — three scenarios
 
-When you start on a customer the framework hasn't seen before, the agent will run one command:
+**Scenario 1 — A colleague already has a KB for this customer**
+Nothing special to do. Every customer-facing agent runs a **silent discovery** at session start that scans OneDrive for `AI-INFO - DO NOT DELETE/` folders and adds any new ones to your local registry. Next time you say "apply tender" and mention that customer, the agent already knows the KB exists.
+
+**Scenario 2 — You're the first person working on a brand-new customer**
+When you ask the agent to save something for a customer it doesn't recognise, it will run:
 
 ```bash
 ~/AI-Vault/Claude\ Folder/kb_bootstrap_customer.sh "Customer Name"
 ```
 
-This creates the hidden `AI-INFO - DO NOT DELETE/` folder inside their OneDrive customer folder, seeds `README.md`, `notes.md`, `memory.md`, and adds the customer to the registry. It's idempotent — running it again is safe.
+This creates the hidden `AI-INFO - DO NOT DELETE/` folder inside their OneDrive customer folder, seeds `README.md`, `notes.md`, `memory.md`, adds the customer to the registry, and applies the hidden flag. It's idempotent — running it again is safe.
 
-To rebuild the searchable index (e.g. after new proposals were added):
+**Scenario 3 — Someone added new documents to a customer folder**
+Rebuild the searchable index:
 
 ```bash
 ~/AI-Vault/Claude\ Folder/kb_refresh_customer.sh "Customer Name"
 ```
+
+This re-converts only the new/changed source docs and updates your local vector index. Takes seconds.
 
 The full rule book lives in `~/AI-Vault/docs/KB_CONVENTIONS.md`.
 
