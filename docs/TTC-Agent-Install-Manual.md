@@ -6,6 +6,8 @@
 
 If you get stuck at any step, send a screenshot to Joerg and we will get you unblocked.
 
+> **Already installed?** Skip to [Updating to the latest version](#updating-to-the-latest-version) — one command and you're current. The [Knowledge Base section](#knowledge-base--how-its-organised) covers the new two-tier (general + shared customer) model.
+
 ---
 
 ## What you will end up with
@@ -289,6 +291,136 @@ and edit:
 4. `memory/timezone-context.md` — your timezone and those of your main contacts
 
 Once saved, the next time you type `apply personal` in Claude Code the agent picks up your customisations.
+
+---
+
+## Knowledge Base — how it's organised
+
+The agents read from **two kinds of knowledge base**. Understanding the split helps you know where to put things and what your colleagues will and won't see.
+
+### Tier 1 — General KB (local, private to you)
+
+Location: `~/AI-Vault/Claude Folder/Knowledge Base/`
+
+Contains TTC-internal reference material that every installation keeps its own copy of:
+
+| Folder | What's in it |
+|---|---|
+| `BwBm/` | Bundeswehr SAP programme (restricted — only if you have bwbm agent access) |
+| `Finance/` | TTC contract templates, pricing baselines, partner agreements |
+| `Personal/` | Your own personal notes |
+| `ttc-general/` | Brand assets, sales methodology, service offerings |
+| `Archive/` | Historical, read-only |
+
+This tier is **local to your machine**. Your colleagues have their own copies. Refreshing one doesn't touch anyone else's.
+
+### Tier 2 — Customer KB (shared via OneDrive)
+
+Location: every active customer has a hidden folder called `AI-INFO - DO NOT DELETE/` directly under their OneDrive folder. Examples:
+
+```
+OneDrive-TTCGlobal/Sales/Customer/Middle East/ADNOC/AI-INFO - DO NOT DELETE/
+OneDrive-TTCGlobal/Sales/Customer/Middle East/ENOC/AI-INFO - DO NOT DELETE/
+OneDrive-TTCGlobal/Delivery/Leapwork/VKB/AI-INFO - DO NOT DELETE/
+```
+
+Inside each folder:
+
+| File / folder | Purpose |
+|---|---|
+| `README.md` | Explains rules, names the responsible owner |
+| `notes.md` | **Human-editable** running notes on the customer — anyone with folder access can contribute |
+| `memory.md` | Agent session highlights — what AI has learned or decided |
+| `converted/` | Generated `.txt` files agents read for semantic search — don't edit by hand |
+| `_index.json` | Delta manifest (auto-generated) |
+
+**Why this matters:**
+- **Multi-user collaboration** — when you work on ADNOC, your agent picks up notes your colleague added last week. When you add something, it syncs to them via OneDrive.
+- **One source of truth per customer** — no more duplicate customer KBs on different machines.
+- **Folder is hidden** on macOS / Windows — press `Cmd+Shift+.` (Mac) or enable "Show hidden items" (Windows) to see it. OneDrive Web always shows it.
+- **Name is deliberately awkward** (`AI-INFO - DO NOT DELETE`) so no one mistakes it for deliverables. OneDrive restores deletions within 93 days anyway.
+
+### Which agents use which tier
+
+| Agent | General KB | Customer KB |
+|---|---|---|
+| **Tender** | `ttc-general/`, `Finance/` | ✅ scoped per customer |
+| **Contracts** | `Finance/Contract Templates TTC/` | ✅ scoped per customer |
+| **Test** | `BwBm/`, `ttc-general/` | ✅ scoped per customer |
+| **TAF** | `ttc-general/` | ✅ reads customer context for test scope |
+| **QA TOM Generator** | `ttc-general/`, methodology | ✅ scoped per customer |
+| **SAP** | `BwBm/` | ✅ when working on customer SAP landscape |
+| **BwBm** | `BwBm/` (internal project — stays Tier 1) | rarely |
+| **Infrastructure** | documents the framework itself | — |
+| Finance, HR, Odoo, Personal, Private, PPTX | their own reference | — (don't touch customer KBs) |
+
+The agents know the split — you don't have to think about it. Just tell them the customer name and they'll look in the right place.
+
+### Working with a new customer
+
+When you start on a customer the framework hasn't seen before, the agent will run one command:
+
+```bash
+~/AI-Vault/Claude\ Folder/kb_bootstrap_customer.sh "Customer Name"
+```
+
+This creates the hidden `AI-INFO - DO NOT DELETE/` folder inside their OneDrive customer folder, seeds `README.md`, `notes.md`, `memory.md`, and adds the customer to the registry. It's idempotent — running it again is safe.
+
+To rebuild the searchable index (e.g. after new proposals were added):
+
+```bash
+~/AI-Vault/Claude\ Folder/kb_refresh_customer.sh "Customer Name"
+```
+
+The full rule book lives in `~/AI-Vault/docs/KB_CONVENTIONS.md`.
+
+### Storage rules cheat sheet
+
+| What you're producing | Where it goes |
+|---|---|
+| Drafts, in-progress work | `~/AI-Vault/Agents/<Agent>/working/` |
+| Collaborative customer notes | `<customer>/AI-INFO - DO NOT DELETE/notes.md` |
+| Agent session highlights | `<customer>/AI-INFO - DO NOT DELETE/memory.md` |
+| Session memory (cross-customer) | `~/AI-Vault/Agents/<Agent>/memory/` |
+| **Final client deliverable** | `<customer>/` proper — only after Joerg confirms "ship it" |
+
+Never create an `AI-INFO` folder manually — always use the bootstrap script so the registry stays in sync.
+
+---
+
+## Updating to the latest version
+
+The framework and agents are under active development. To pull the latest version of everything — framework, all agents, KB scripts, and conventions — run **one command**:
+
+### On Mac
+
+```bash
+~/AI-Vault/ttc-agent-framework/scripts/update-all.sh
+```
+
+### On Windows
+
+```powershell
+& "$env:USERPROFILE\AI-Vault\ttc-agent-framework\scripts\update-all.sh"
+```
+*(Windows support via Git Bash; a native `update-all.ps1` may be added later.)*
+
+What it does:
+- Pulls the framework repo
+- Pulls every agent repo you have installed (fast-forward only)
+- **Skips any repo with uncommitted local changes** (safe — nothing overwritten)
+- Refreshes the runtime KB scripts (`kb_bootstrap_customer.sh`, `kb_refresh_customer.sh`, the converter, the vectorizer) and `KB_CONVENTIONS.md`
+
+System-prompt changes take effect in your **next** Claude Code conversation. No reload or restart needed.
+
+When to run it:
+- When Joerg says "I pushed an update"
+- Once a week to stay current
+- Before starting a big customer engagement
+
+When **not** to run it (use the one-line installer from Step 4 instead):
+- First install on a new machine
+- When a new tool or Python dependency has been added (rare — usually mentioned in release notes)
 
 ---
 
