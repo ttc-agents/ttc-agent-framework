@@ -20,20 +20,40 @@ Most TTC colleagues end up using both apps side by side: Claude Desktop for quic
 
 ---
 
-## The 6 steps (recommended order)
+## The 7 steps (recommended order)
 
-1. **Create a GitHub account** (if you do not already have one)
-2. **Send Joerg your GitHub username** so he can grant you access to the right agents
-3. **Install Claude Desktop** (highly recommended — the easier UI, and what you will use to let Claude control your local tools)
-4. **Run the one-line TTC installer** — this installs everything else automatically
-5. **Start Claude Code and try an agent**
-6. **Set up 1Password and your Claude Desktop connectors** (recommended)
+1. **Activate your Claude account** — follow the invite email Joerg sent you
+2. **Create a GitHub account** (if you do not already have one)
+3. **Send Joerg your GitHub username** so he can grant you access to the right agents
+4. **Install Claude Desktop** (highly recommended — the easier UI, and what you will use to let Claude control your local tools)
+5. **Run the one-line TTC installer** — this installs everything else automatically
+6. **Start Claude Code and try an agent**
+7. **Set up 1Password and your Claude Desktop connectors** (recommended)
 
-Do them in this order. If you run the installer before step 2 is done, it will fail at the GitHub login step.
+Do them in this order. If you run the installer before step 3 is done, it will fail at the GitHub login step.
 
 ---
 
-## Step 1 — Create a GitHub account
+## Step 1 — Activate your Claude account
+
+Before you can use the agents, your Anthropic (Claude) account must be active. Joerg sends each TTC colleague an **invitation email from Anthropic** when onboarding — it contains a personal activation link.
+
+1. Open the invitation email with the subject line *"You've been invited to join TTC on Claude"* (or similar). Check your Junk / Clutter folder if you don't see it — Anthropic emails sometimes land there.
+2. Click the **Accept invitation** button in the email. It takes you to claude.ai.
+3. **Create or sign in to your Anthropic account** using your TTC work email address. If you already have a personal Anthropic account on your work email, it will link; otherwise create a new one and set a password.
+4. Accept the workspace invitation when prompted — you should now see "TTC" (or the TTC workspace name) in your account.
+5. Try sending a test message at **https://claude.ai** — if Claude replies, your account is active. Done.
+
+If:
+- **The email expired** or you cannot find it → ask Joerg to resend.
+- **You already had a personal Claude account** on a different email → that's fine; the TTC invite will link your TTC workspace to the existing account. Use whichever email the invite was sent to.
+- **Claude.ai asks you to pay** → you are not yet in the TTC workspace; re-open the invite link or ask Joerg.
+
+Once you can log into claude.ai and reply to a test prompt, carry on with step 2.
+
+---
+
+## Step 2 — Create a GitHub account
 
 GitHub is where the TTC agents are stored. You need a (free) personal GitHub account to download them.
 
@@ -47,7 +67,7 @@ You do **not** need to create any repositories, add a profile picture, or anythi
 
 ---
 
-## Step 2 — Send Joerg your GitHub username
+## Step 3 — Send Joerg your GitHub username
 
 Email or message Joerg with:
 
@@ -56,26 +76,26 @@ Email or message Joerg with:
 
 Joerg will then add you to the right teams inside the TTC GitHub organisation. You will receive an email from GitHub asking you to accept the invitation — click the link and accept.
 
-Only after you have accepted the invitation should you move on to step 4.
+Only after you have accepted the invitation should you move on to step 5.
 
 ---
 
-## Step 3 — Install Claude Desktop (highly recommended)
+## Step 4 — Install Claude Desktop (highly recommended)
 
 Claude Desktop is the normal Claude chat app — the same experience as claude.ai, running natively on your laptop. It is the **easier day-to-day interface** for most work: drafting, research, long conversations, and — crucially — the place where Claude can reach out into your tools (Word, PowerPoint, Outlook, your browser) and **do** things for you, not just talk about them.
 
-It is **not** where the TTC agents live (those run in Claude Code, step 4). But most TTC colleagues end up using both apps side by side, and Claude Desktop is the one you will open first thing in the morning.
+It is **not** where the TTC agents live (those run in Claude Code, step 5). But most TTC colleagues end up using both apps side by side, and Claude Desktop is the one you will open first thing in the morning.
 
 - **Mac:** https://claude.ai/download — click the macOS download button, open the downloaded file, drag Claude into Applications.
 - **Windows:** https://claude.ai/download — click the Windows download button, run the installer.
 
-Sign in with your Anthropic account (the same one you will use in step 5 for Claude Code).
+Sign in with the Anthropic account you activated in step 1 (same credentials you will use in step 6 for Claude Code).
 
-Once signed in, come back here and carry on with step 4. We will add the useful extensions and connectors to Claude Desktop in step 6.
+Once signed in, come back here and carry on with step 5. We will add the useful extensions and connectors to Claude Desktop in step 7.
 
 ---
 
-## Step 4 — Install the TTC Framework (one-line command)
+## Step 5 — Install the TTC Framework (one-line command)
 
 This is the magic step. One command installs everything: Git, GitHub CLI, Node.js, Python, the TTC framework, and the four base agents (SAP, Test, TAF, Tender). Total time about 10 minutes depending on your internet speed.
 
@@ -137,7 +157,7 @@ iwr https://raw.githubusercontent.com/ttc-agents/ttc-agent-framework/main/instal
 
 ---
 
-## Step 5 — Start Claude Code and try an agent
+## Step 6 — Start Claude Code and try an agent
 
 1. Open a new Terminal (Mac) or PowerShell (Windows) window. Closing and reopening is important — it makes your laptop pick up the new tools in the search path.
 
@@ -161,7 +181,7 @@ and press Enter. You should see a message saying the Tender agent is ready, alon
 
 ---
 
-## Step 6 — Set up 1Password and Claude Desktop connectors
+## Step 7 — Set up 1Password and Claude Desktop connectors
 
 Now that the agents run, these recommended extras make them genuinely useful in your daily work.
 
@@ -169,7 +189,7 @@ Now that the agents run, these recommended extras make them genuinely useful in 
 
 The TTC agents are designed to pull authentication secrets — Microsoft 365 tokens, API keys, database passwords — from **1Password**, rather than storing them in plaintext configuration files. That way your credentials stay encrypted at rest and you never accidentally commit one to a repository.
 
-The installer in step 4 already put the **1Password command-line tool** on your machine. You still need the 1Password **desktop app** and an account.
+The installer in step 5 already put the **1Password command-line tool** on your machine. You still need the 1Password **desktop app** and an account.
 
 1. Download and install the 1Password desktop app from **https://1password.com/downloads/**
 2. Sign in to your 1Password account. If you would like access to the TTC shared "AI Vault" (where the MS365 app registration and similar shared credentials live), ask Joerg to invite you.
@@ -191,7 +211,7 @@ Bitwarden, Dashlane, LastPass, KeePass, Apple Keychain — all of them can work,
 
 ### Claude Desktop — recommended connectors
 
-Claude Desktop (the chat app from step 3) supports the same kind of integrations as Claude Code. Here is the setup used on the reference TTC laptop — you can mirror the whole thing or pick and choose.
+Claude Desktop (the chat app from step 4) supports the same kind of integrations as Claude Code. Here is the setup used on the reference TTC laptop — you can mirror the whole thing or pick and choose.
 
 **MCP servers** (advanced — open Claude Desktop → Settings → Developer → Edit Config):
 
@@ -425,7 +445,7 @@ When to run it:
 - Once a week to stay current
 - Before starting a big customer engagement
 
-When **not** to run it (use the one-line installer from Step 4 instead):
+When **not** to run it (use the one-line installer from Step 5 instead):
 - First install on a new machine
 - When a new tool or Python dependency has been added (rare — usually mentioned in release notes)
 
