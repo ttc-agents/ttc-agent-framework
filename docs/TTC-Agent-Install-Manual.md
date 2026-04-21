@@ -146,6 +146,27 @@ iwr https://raw.githubusercontent.com/ttc-agents/ttc-agent-framework/main/instal
     The installer is designed to be run again — it skips whatever is already done and picks up where it stopped. The second run usually finishes without any further interaction because you are already authenticated with GitHub.
 8. When you see `=== Install complete ===` the setup is done.
 
+9. **Verify that `claude` is reachable.** In the same PowerShell window, type:
+
+    ```powershell
+    claude --version
+    ```
+
+    If it prints a version number (e.g. `1.x.x`), you are done — move on to step 6.
+    If you get *"'claude' is not recognized as an internal or external command"*, see [PATH not set correctly on Windows](#path-not-set-correctly-on-windows) in the troubleshooting section below before continuing.
+
+10. **Ensure Claude is reachable from Claude Desktop as well.** Claude Desktop is a standard Windows application — it launches with only the *system-level* PATH, not the per-user PATH that your terminal session uses. If `claude` or any MCP tool was installed under a user-level path (which is the default on Windows), Claude Desktop will not find it even though your terminal can.
+
+    Run this one extra command in the **same elevated PowerShell window** to promote the relevant paths from user level to system level (safe to run more than once):
+
+    ```powershell
+    iwr https://raw.githubusercontent.com/ttc-agents/ttc-agent-framework/main/fix-windows-path.ps1 | iex
+    ```
+
+    It finds where Node.js, npm, and Claude Code were installed, adds those directories to the **system** PATH (the one all applications see), and prints a confirmation. After it finishes, **restart your computer once** — this is the only reliable way to make Windows pick up the new system PATH everywhere, including inside Claude Desktop.
+
+    > **Why a restart?** Windows desktop applications read environment variables when they launch. Unlike terminal windows (where you can just open a new one), a running Claude Desktop session cannot be refreshed by simply closing and reopening it — a full logout or restart is required.
+
 ### What the installer does, in plain language
 
 - Checks whether each required tool is already on your machine — skips any that are already installed.
@@ -160,6 +181,8 @@ iwr https://raw.githubusercontent.com/ttc-agents/ttc-agent-framework/main/instal
 ## Step 6 — Start Claude Code and try an agent
 
 1. Open a new Terminal (Mac) or PowerShell (Windows) window. Closing and reopening is important — it makes your laptop pick up the new tools in the search path.
+
+    > **Windows only:** if you ran the PATH fix script and restarted your computer in step 5, open PowerShell normally (no need for "Run as administrator" from now on).
 
 2. Type:
 
@@ -472,6 +495,54 @@ This means your GitHub account does not have access to that repository yet. Chec
 ### The device-flow code expired
 
 If you were slow to paste the 8-character code, it may expire. Just type the install command again — a new code is generated each time.
+
+### PATH not set correctly on Windows
+
+This is the most common Windows issue and covers two symptoms:
+
+**Symptom A — `claude` is not recognised in a terminal after install**
+
+The installer adds the Claude Code directory to your *user* PATH, but the terminal window you used during installation was opened *before* that change was made, so it does not see it yet.
+
+Fix: close the PowerShell window and open a new one. Then re-run `claude --version`. If it still fails, run:
+
+```powershell
+echo $env:PATH
+```
+
+and look for a path containing `claude` or `AnthropicClaude`. If it is not there, run the fix script manually:
+
+```powershell
+iwr https://raw.githubusercontent.com/ttc-agents/ttc-agent-framework/main/fix-windows-path.ps1 | iex
+```
+
+then restart your computer and try again.
+
+**Symptom B — `claude` works in a terminal but not from Claude Desktop (or MCP tools fail to start)**
+
+Claude Desktop is launched by Windows as a graphical application — it only inherits the *system* PATH, not the per-user PATH that your terminal sessions pick up. Tools installed by npm or by the Anthropic native Claude Code installer typically land in user-level folders (for example `%APPDATA%\npm` or `%LOCALAPPDATA%\AnthropicClaude\`) which are invisible to Desktop apps until those paths are promoted to system level.
+
+Fix: run (in an elevated PowerShell — right-click "Run as administrator"):
+
+```powershell
+iwr https://raw.githubusercontent.com/ttc-agents/ttc-agent-framework/main/fix-windows-path.ps1 | iex
+```
+
+The script detects the correct install locations, adds them to the system PATH, and prints what it changed. Then **restart your computer** — there is no shorter workaround because Windows caches environment variables per running process.
+
+After restart, open a terminal and re-run `claude --version` to confirm, then open Claude Desktop and try an MCP action. Both should work.
+
+**Manual PATH fix (if the script is unavailable)**
+
+1. Press **Win + R**, type `sysdm.cpl`, click OK.
+2. Open the **Advanced** tab → click **Environment Variables**.
+3. In the lower *System variables* panel, find the variable called `Path` and click **Edit**.
+4. Click **New** and add each of the following lines that applies to your machine:
+   - `%LOCALAPPDATA%\AnthropicClaude` (Claude Code native installer)
+   - `%APPDATA%\npm` (Node.js / npm global tools)
+   - `C:\Program Files\nodejs` (Node.js system installer)
+5. Click OK on every dialog to save.
+6. Restart your computer.
 
 ### Windows says "execution of scripts is disabled"
 
