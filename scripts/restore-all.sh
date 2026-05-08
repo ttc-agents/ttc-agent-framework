@@ -17,7 +17,7 @@ REPOS=(
     "ttc-agent-test:Test"
     "ttc-agent-taf:TAF"
     "ttc-agent-bwbm:BwBm"
-    "ttc-agent-pptx:PPTX"
+    "ttc-agent-docs:Docs"
     "ttc-agent-odoo:Odoo"
     "ttc-agent-infra:Infrastructure"
     "ttc-agent-private:Private"

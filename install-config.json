@@ -34,7 +34,7 @@
     { "repo": "ttc-agent-tender",            "dir": "Tender",            "apply": "tender",         "submodules": false, "auto_install": true  },
     { "repo": "ttc-agent-hr",                "dir": "HR",                "apply": "hr",             "submodules": false, "auto_install": true  },
     { "repo": "ttc-agent-bwbm",              "dir": "BwBm",              "apply": "bwbm",           "submodules": false, "auto_install": true  },
-    { "repo": "ttc-agent-pptx",              "dir": "PPTX",              "apply": "pptx",           "submodules": false, "auto_install": true  },
+    { "repo": "ttc-agent-docs",              "dir": "Docs",              "apply": "docs",           "submodules": false, "auto_install": true  },
     { "repo": "ttc-agent-odoo",              "dir": "Odoo",              "apply": "odoo",           "submodules": false, "auto_install": true  },
     { "repo": "ttc-agent-contracts",         "dir": "Contracts",         "apply": "contracts",      "submodules": false, "auto_install": true  },
     { "repo": "ttc-agent-finance",           "dir": "Finance",           "apply": "finance",        "submodules": false, "auto_install": true  },
