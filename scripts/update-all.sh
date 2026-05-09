@@ -16,20 +16,22 @@
 #                                        # (default: Mac-mini.local)
 #   TTC_SKIP_MINI_PRECOMMIT=1            # skip the pre-flight even with --force
 #
-# Use --force on machines that DON'T auto-commit (e.g. MBA, Windows) where
-# Syncthing already shipped your working changes to the always-on machine
-# (Mac Mini), which committed + pushed them. Local "modifications" there
-# are stale shadows of work that's already on GitHub via the other path.
+# Use --force on machines that DON'T auto-commit (e.g. MBA, Windows) — the
+# script will pull the latest from GitHub and discard local working-tree
+# diffs.
 #
-# SAFETY (--force only): when invoked on a non-Mini machine, the script
-# first SSHs to the Mini and triggers its auto-commit. This prevents the
-# race where: Mini has uncommitted edits → Syncthing already shipped
-# those edits to MBA → MBA's reset --hard reverts them on disk → mtime
-# bumps → Syncthing propagates the revert back to Mini → Mini's pending
-# edits silently lost.
-# Pre-flight order: ssh Mini → auto-commit-agents.sh → push → MBA reset.
-# Now origin/main reflects Mini's latest state, MBA resets to that, and
-# Syncthing sees no diff.
+# SAFETY — pre-flight Mini commit (Macs only, not Mini itself):
+# Other Macs share working trees with the Mini via Syncthing, so --force
+# first SSHs to the Mini and triggers its auto-commit. This closes a race
+# where: Mini has uncommitted edits → Syncthing already shipped them to
+# the Mac → Mac's reset --hard reverts them on disk → mtime bumps →
+# Syncthing propagates the revert back to Mini → Mini's pending edits
+# silently lost.
+# Pre-flight order: ssh Mini → auto-commit-agents.sh → push → Mac reset.
+#
+# Windows / Linux machines are standard git clients — they're not in the
+# Syncthing pool, so the race cannot happen. Pre-flight is skipped
+# automatically on non-Darwin hosts.
 
 set -euo pipefail
 
@@ -125,17 +127,28 @@ else
 fi
 echo ""
 
-# Pre-flight: when --force on a non-Mini machine, trigger Mini's auto-commit
-# first so origin/main reflects Mini's pending edits BEFORE we reset locally.
-# Otherwise Syncthing can propagate our reset back to Mini and silently
-# clobber its uncommitted state. See header comment for full reasoning.
-THIS_HOST="$(scutil --get ComputerName 2>/dev/null || hostname)"
+# Pre-flight: when --force on a non-Mini Mac (= Syncthing-pool member),
+# trigger Mini's auto-commit first so origin/main reflects Mini's pending
+# edits BEFORE we reset locally. Without this, Syncthing can propagate our
+# reset back to Mini and silently clobber its uncommitted state.
+# Skipped on non-Darwin hosts (Windows / Linux are not in the Syncthing
+# pool — they're standard git clients).
+# See header comment for full reasoning.
+IS_MAC=0
+[[ "$(uname -s)" == "Darwin" ]] && IS_MAC=1
+
 IS_MINI=0
-if [[ "$THIS_HOST" == *"Mac mini"* ]] || [[ "$(hostname)" == *"Mac-mini"* ]]; then
-    IS_MINI=1
+if [[ "$IS_MAC" == "1" ]]; then
+    THIS_HOST="$(scutil --get ComputerName 2>/dev/null || hostname)"
+    if [[ "$THIS_HOST" == *"Mac mini"* ]] || [[ "$(hostname)" == *"Mac-mini"* ]]; then
+        IS_MINI=1
+    fi
 fi
 
-if [[ "$FORCE" == "1" ]] && [[ "$IS_MINI" == "0" ]] && [[ "${TTC_SKIP_MINI_PRECOMMIT:-0}" != "1" ]]; then
+if [[ "$FORCE" == "1" ]] \
+        && [[ "$IS_MAC" == "1" ]] \
+        && [[ "$IS_MINI" == "0" ]] \
+        && [[ "${TTC_SKIP_MINI_PRECOMMIT:-0}" != "1" ]]; then
     MINI_HOST="${TTC_MINI_HOST:-Mac-mini.local}"
     log "Pre-flight: triggering auto-commit on Mac Mini ($MINI_HOST)..."
     if ssh -o ConnectTimeout=4 -o BatchMode=yes "$MINI_HOST" 'true' 2>/dev/null; then
