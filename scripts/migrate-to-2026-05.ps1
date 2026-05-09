@@ -75,14 +75,40 @@ Write-Host ""
 
 # ─── 1. Verify SSH to GitHub works (everything depends on this) ─────────────
 Write-Log "Step 1/8: Verify SSH access to GitHub"
-$sshOut = & ssh -T -o BatchMode=yes -o StrictHostKeyChecking=accept-new git@github.com 2>&1
+# `ssh -T git@github.com` always exits non-zero (GitHub closes the shell after
+# auth). On PowerShell with $ErrorActionPreference = 'Stop', the native stderr
+# from a failed key check would otherwise become a terminating exception
+# before we can read the message. We capture into a try/catch so the script
+# can present its own clear "fix this first" instructions instead.
+$sshOut = ""
+$prevEap = $ErrorActionPreference
+$ErrorActionPreference = 'Continue'
+try {
+    $sshOut = (& ssh -T -o BatchMode=yes -o StrictHostKeyChecking=accept-new git@github.com 2>&1 | Out-String)
+} catch {
+    $sshOut = $_.Exception.Message
+}
+$ErrorActionPreference = $prevEap
+
 if ($sshOut -match "successfully authenticated") {
     Write-Ok "SSH to git@github.com works"
 } else {
     Write-Err "SSH to GitHub is NOT working. Fix this first:"
+    Write-Err ""
+    Write-Err "  # 1. (skip if you already have ~/.ssh/id_ed25519) Generate a key:"
     Write-Err "  ssh-keygen -t ed25519 -C `"$env:USERNAME@$env:COMPUTERNAME`""
-    Write-Err "  gh ssh-key add `"$env:USERPROFILE\.ssh\id_ed25519.pub`" --title `"$env:USERNAME@$env:COMPUTERNAME ($(Get-Date -Format 'yyyy-MM'))`""
-    Write-Err "Probe output was: $sshOut"
+    Write-Err ""
+    Write-Err "  # 2. Make sure gh CLI is logged in:"
+    Write-Err "  gh auth login --hostname github.com --git-protocol ssh --web"
+    Write-Err ""
+    Write-Err "  # 3. Upload the public key:"
+    Write-Err "  gh ssh-key add `"`$env:USERPROFILE\.ssh\id_ed25519.pub`" --title `"`$env:USERNAME@`$env:COMPUTERNAME ($(Get-Date -Format 'yyyy-MM'))`""
+    Write-Err ""
+    Write-Err "  # 4. Verify:"
+    Write-Err "  ssh -T git@github.com"
+    Write-Err ""
+    Write-Err "Probe output was:"
+    Write-Err "  $($sshOut.Trim())"
     exit 1
 }
 
