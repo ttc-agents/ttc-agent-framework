@@ -55,7 +55,7 @@ echo "Install root: $INSTALL_ROOT"
 echo ""
 
 # ─── 1. Verify SSH to GitHub works (everything depends on this) ─────────────
-log "Step 1/7: Verify SSH access to GitHub"
+log "Step 1/8: Verify SSH access to GitHub"
 # `ssh -T git@github.com` always exits 1 (GitHub explicitly closes the shell),
 # so we capture stderr and look for the success banner instead of relying on
 # the exit code. With set -o pipefail we'd otherwise misread the SSH probe.
@@ -71,8 +71,29 @@ else
     exit 1
 fi
 
-# ─── 2. Convert HTTPS remotes to SSH ────────────────────────────────────────
-log "Step 2/7: Convert HTTPS remotes to SSH"
+# ─── 2. Bootstrap: ensure ttc-agent-framework is present + current ──────────
+# The migrate script normally lives inside the framework, but it can also be
+# curl'd standalone from GitHub. Either way, every later step needs the
+# framework's scripts on disk, so we make sure of it now.
+log "Step 2/8: Bootstrap framework"
+FRAMEWORK_DIR="$INSTALL_ROOT/ttc-agent-framework"
+if [[ -d "$FRAMEWORK_DIR/.git" ]]; then
+    log "  Framework present — pulling latest"
+    if (( DRY )); then
+        echo "  DRY: git -C \"$FRAMEWORK_DIR\" pull --ff-only"
+    else
+        git -C "$FRAMEWORK_DIR" pull --ff-only --quiet 2>/dev/null \
+            || warn "  pull failed (probably divergent local commits) — continuing"
+    fi
+else
+    log "  Framework not yet on disk — cloning"
+    do_it "mkdir -p \"$INSTALL_ROOT\""
+    do_it "git clone git@github.com:$GITHUB_ORG/ttc-agent-framework.git \"$FRAMEWORK_DIR\""
+fi
+ok "Framework at $FRAMEWORK_DIR"
+
+# ─── 3. Convert HTTPS remotes to SSH ────────────────────────────────────────
+log "Step 3/8: Convert HTTPS remotes to SSH"
 CONVERTED=0
 for d in "$AGENTS_DIR"/*/ \
          "$INSTALL_ROOT/ttc-agent-framework" \
@@ -90,7 +111,7 @@ done
 ok "$CONVERTED remote(s) converted to SSH"
 
 # ─── 3. Old PPTX agent → Docs agent ─────────────────────────────────────────
-log "Step 3/7: Migrate PPTX agent to Docs"
+log "Step 4/8: Migrate PPTX agent to Docs"
 if [[ -d "$AGENTS_DIR/PPTX" ]] && [[ ! -d "$AGENTS_DIR/Docs" ]]; then
     log "  Found old Agents/PPTX/ but no Agents/Docs/ — cloning Docs from GitHub"
     do_it "git clone git@github.com:$GITHUB_ORG/ttc-agent-docs.git \"$AGENTS_DIR/Docs\""
@@ -111,7 +132,7 @@ fi
 ok "Docs agent in place"
 
 # ─── 4. mcp-proton: ~/Personal → AI-Vault/Tools, into git, password to 1P ─
-log "Step 4/7: Relocate + version mcp-proton"
+log "Step 5/8: Relocate + version mcp-proton"
 TOOLS_PROTON="$INSTALL_ROOT/Tools/mcp-proton"
 if [[ ! -d "$TOOLS_PROTON/.git" ]]; then
     if [[ -d "$HOME/Personal/mcp-proton" ]] && [[ ! -L "$HOME/Personal/mcp-proton" ]]; then
@@ -178,7 +199,7 @@ if [[ -d "$HOME/Personal" ]] && [[ -z "$(ls -A "$HOME/Personal" 2>/dev/null | gr
 fi
 
 # ─── 5. Brand-split: clone ttc-brand-standards, drop old imagery/logos ──────
-log "Step 5/7: Brand split (logos + imagery → OneDrive)"
+log "Step 6/8: Brand split (logos + imagery → OneDrive)"
 BRAND_DIR="$INSTALL_ROOT/brand"
 if [[ ! -d "$BRAND_DIR/.git" ]]; then
     if [[ -d "$BRAND_DIR" ]]; then
@@ -219,7 +240,7 @@ else
 fi
 
 # ─── 6. ~/CLAUDE.md → symlink to Claude-Config ──────────────────────────────
-log "Step 6/7: Ensure ~/CLAUDE.md is a symlink to Claude-Config"
+log "Step 7/8: Ensure ~/CLAUDE.md is a symlink to Claude-Config"
 CLAUDE_MD="$HOME/CLAUDE.md"
 TARGET_MD="$INSTALL_ROOT/Claude-Config/CLAUDE.md"
 if [[ ! -d "$INSTALL_ROOT/Claude-Config/.git" ]]; then
@@ -250,7 +271,7 @@ elif [[ -d "$COMMANDS_TARGET" ]]; then
 fi
 
 # ─── 7. Final pull-everything-current ───────────────────────────────────────
-log "Step 7/7: Pull every repo to its current GitHub state"
+log "Step 8/8: Pull every repo to its current GitHub state"
 if [[ "$DRY" == "1" ]]; then
     echo "  DRY: would run update-all.sh --force"
 else
