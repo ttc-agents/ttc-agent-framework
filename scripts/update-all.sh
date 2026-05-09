@@ -12,11 +12,24 @@
 #                                        # (gitignored files like working/ stay)
 #   TTC_INSTALL_ROOT=/path update-all.sh # custom install root
 #   TTC_FORCE_RESET=1 update-all.sh      # same as --force via env
+#   TTC_MINI_HOST=user@host              # override Mini SSH target
+#                                        # (default: Mac-mini.local)
+#   TTC_SKIP_MINI_PRECOMMIT=1            # skip the pre-flight even with --force
 #
 # Use --force on machines that DON'T auto-commit (e.g. MBA, Windows) where
 # Syncthing already shipped your working changes to the always-on machine
 # (Mac Mini), which committed + pushed them. Local "modifications" there
 # are stale shadows of work that's already on GitHub via the other path.
+#
+# SAFETY (--force only): when invoked on a non-Mini machine, the script
+# first SSHs to the Mini and triggers its auto-commit. This prevents the
+# race where: Mini has uncommitted edits → Syncthing already shipped
+# those edits to MBA → MBA's reset --hard reverts them on disk → mtime
+# bumps → Syncthing propagates the revert back to Mini → Mini's pending
+# edits silently lost.
+# Pre-flight order: ssh Mini → auto-commit-agents.sh → push → MBA reset.
+# Now origin/main reflects Mini's latest state, MBA resets to that, and
+# Syncthing sees no diff.
 
 set -euo pipefail
 
@@ -111,6 +124,39 @@ else
     echo "=== TTC Agent Framework — Update All ==="
 fi
 echo ""
+
+# Pre-flight: when --force on a non-Mini machine, trigger Mini's auto-commit
+# first so origin/main reflects Mini's pending edits BEFORE we reset locally.
+# Otherwise Syncthing can propagate our reset back to Mini and silently
+# clobber its uncommitted state. See header comment for full reasoning.
+THIS_HOST="$(scutil --get ComputerName 2>/dev/null || hostname)"
+IS_MINI=0
+if [[ "$THIS_HOST" == *"Mac mini"* ]] || [[ "$(hostname)" == *"Mac-mini"* ]]; then
+    IS_MINI=1
+fi
+
+if [[ "$FORCE" == "1" ]] && [[ "$IS_MINI" == "0" ]] && [[ "${TTC_SKIP_MINI_PRECOMMIT:-0}" != "1" ]]; then
+    MINI_HOST="${TTC_MINI_HOST:-Mac-mini.local}"
+    log "Pre-flight: triggering auto-commit on Mac Mini ($MINI_HOST)..."
+    if ssh -o ConnectTimeout=4 -o BatchMode=yes "$MINI_HOST" 'true' 2>/dev/null; then
+        # Run the Mini's auto-commit script. It is hostname-guarded so it
+        # only does anything when actually executed on Mac mini — running
+        # via SSH satisfies that.
+        if ssh -o ConnectTimeout=10 "$MINI_HOST" \
+                'bash "$HOME/AI-Vault/scripts/auto-commit-agents.sh"' >/dev/null 2>&1; then
+            ok  "  Mini pre-commit done — origin reflects Mini's latest state"
+            sleep 2  # let push fully settle before we fetch
+        else
+            warn "  Mini pre-commit script returned non-zero — proceeding cautiously"
+        fi
+    else
+        warn "  Mac Mini ($MINI_HOST) not reachable via SSH"
+        warn "  Proceeding WITHOUT pre-commit. Risk: if Mini has uncommitted"
+        warn "  edits, Syncthing may revert them after this --force run."
+        warn "  Set TTC_MINI_HOST=user@host or TTC_SKIP_MINI_PRECOMMIT=1 to silence."
+    fi
+    echo ""
+fi
 
 # 1. Framework
 log "Updating framework..."
