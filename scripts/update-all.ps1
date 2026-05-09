@@ -1,0 +1,177 @@
+<#
+.SYNOPSIS
+  TTC Agent Framework — pull latest for framework, all agents, and shared repos.
+
+.DESCRIPTION
+  Windows native counterpart to update-all.sh. Iterates over:
+    - the framework (ttc-agent-framework)
+    - every agent under <InstallRoot>/Agents/
+    - shared repos under <InstallRoot>/{Claude-Config,brand,Tools/mcp-proton}
+  and refreshes the runtime KB scripts under "Claude Folder/".
+
+  Default mode: fast-forward pulls only; skips repos with uncommitted changes
+  with a warning.
+
+  -Force flag: fetches origin and hard-resets every repo to its tracked
+  branch, discarding local working-tree changes. Use this if you've been
+  reading Mini-side commits via OneDrive/file-share and your local index
+  drifted, or after a Mac mini auto-commit pushed state you want to land
+  cleanly.
+
+  Windows is treated as a standard git client — no Syncthing pool means no
+  Mini pre-flight, unlike the Mac variant.
+
+.PARAMETER Force
+  Discard local working-tree changes and reset every repo to origin.
+
+.PARAMETER InstallRoot
+  Override install root. Default: $env:USERPROFILE\AI-Vault
+
+.EXAMPLE
+  .\update-all.ps1
+  Default: fast-forward pulls, skip dirty repos.
+
+.EXAMPLE
+  .\update-all.ps1 -Force
+  Reset every repo to its origin tracked branch.
+#>
+
+[CmdletBinding()]
+param(
+    [switch]$Force,
+    [string]$InstallRoot = "$env:USERPROFILE\AI-Vault"
+)
+
+$ErrorActionPreference = "Stop"
+
+function Write-Log     { param($m) Write-Host "[update] $m" -ForegroundColor Cyan }
+function Write-Ok      { param($m) Write-Host "[ok]     $m" -ForegroundColor Green }
+function Write-WarnMsg { param($m) Write-Host "[warn]   $m" -ForegroundColor Yellow }
+function Write-ResetMsg { param($m) Write-Host "[reset]  $m" -ForegroundColor Magenta }
+
+function Get-DefaultBranch {
+    param([string]$RepoDir)
+    $b = git -C $RepoDir symbolic-ref --quiet --short refs/remotes/origin/HEAD 2>$null
+    if ($LASTEXITCODE -eq 0 -and $b) {
+        return ($b -replace '^origin/','')
+    }
+    return "main"
+}
+
+function Update-Repo {
+    param([string]$Dir)
+    if (-not (Test-Path (Join-Path $Dir ".git"))) { return }
+    $name = Split-Path $Dir -Leaf
+
+    $dirtyOutput = git -C $Dir status --porcelain 2>$null
+    $dirty = -not [string]::IsNullOrWhiteSpace($dirtyOutput)
+
+    if ($Force) {
+        $branch = Get-DefaultBranch -RepoDir $Dir
+        git -C $Dir fetch --quiet origin 2>$null
+        if ($LASTEXITCODE -ne 0) {
+            Write-WarnMsg "  $name -- fetch failed"
+            return
+        }
+        $before = (git -C $Dir rev-parse --short HEAD 2>$null).Trim()
+        git -C $Dir reset --hard "origin/$branch" --quiet 2>$null
+        if ($LASTEXITCODE -ne 0) {
+            Write-WarnMsg "  $name -- reset failed"
+            return
+        }
+        $after = (git -C $Dir rev-parse --short HEAD).Trim()
+        if ($dirty) {
+            Write-ResetMsg "  $name -- reset to origin/$branch ($before -> $after, local changes discarded)"
+        } elseif ($before -ne $after) {
+            Write-Ok "  $name -- reset to origin/$branch ($before -> $after)"
+        } else {
+            Write-Ok "  $name -- already at origin/$branch ($after)"
+        }
+        return
+    }
+
+    if ($dirty) {
+        Write-WarnMsg "  $name -- uncommitted changes, skipping (use -Force to discard and reset)"
+        return
+    }
+    git -C $Dir pull --ff-only --quiet 2>$null
+    if ($LASTEXITCODE -eq 0) {
+        $h = (git -C $Dir log -1 --format='%h %s' | Out-String).Trim()
+        if ($h.Length -gt 70) { $h = $h.Substring(0, 70) }
+        Write-Ok "  $name -- $h"
+    } else {
+        Write-WarnMsg "  $name -- pull failed (non-FF?)"
+    }
+}
+
+$FrameworkDir = Join-Path $InstallRoot "ttc-agent-framework"
+$AgentsDir    = Join-Path $InstallRoot "Agents"
+$KbRuntimeDir = Join-Path $InstallRoot "Claude Folder"
+
+Write-Host ""
+if ($Force) {
+    Write-Host "=== TTC Agent Framework -- Update All (FORCE: GitHub is truth) ===" -ForegroundColor Cyan
+    Write-WarnMsg "  Force mode: local working-tree changes will be DISCARDED."
+    Write-WarnMsg "  Gitignored files (working/, .venv, *.log) are kept."
+} else {
+    Write-Host "=== TTC Agent Framework -- Update All ===" -ForegroundColor Cyan
+}
+Write-Host ""
+
+# 1. Framework
+Write-Log "Updating framework..."
+Update-Repo -Dir $FrameworkDir
+
+# 2. All agents
+Write-Host ""
+Write-Log "Updating agents..."
+if (Test-Path $AgentsDir) {
+    Get-ChildItem -Path $AgentsDir -Directory | ForEach-Object {
+        Update-Repo -Dir $_.FullName
+    }
+}
+
+# 3. Shared repos (Claude-Config, brand, Tools/mcp-proton)
+Write-Host ""
+Write-Log "Updating shared repos..."
+foreach ($shared in @(
+    (Join-Path $InstallRoot "Claude-Config"),
+    (Join-Path $InstallRoot "brand"),
+    (Join-Path $InstallRoot "Tools\mcp-proton")
+)) {
+    if (Test-Path (Join-Path $shared ".git")) {
+        Update-Repo -Dir $shared
+    }
+}
+
+# 4. Refresh runtime KB scripts from the framework's versioned copy
+Write-Host ""
+Write-Log "Refreshing runtime KB scripts..."
+$KbSrc     = Join-Path $FrameworkDir "scripts\kb"
+$KbDocsSrc = Join-Path $FrameworkDir "docs\KB_CONVENTIONS.md"
+if (Test-Path $KbSrc) {
+    New-Item -ItemType Directory -Path $KbRuntimeDir -Force | Out-Null
+    New-Item -ItemType Directory -Path (Join-Path $InstallRoot "docs") -Force | Out-Null
+    foreach ($f in @(
+        "kb_bootstrap_customer.sh",
+        "kb_refresh_customer.sh",
+        "kb_discover_customers.sh",
+        "kb_discover_customers.py",
+        "convert_to_knowledge_base.py",
+        "kb_vectorize.py"
+    )) {
+        $src = Join-Path $KbSrc $f
+        if (Test-Path $src) {
+            Copy-Item -Path $src -Destination $KbRuntimeDir -Force
+        }
+    }
+    Write-Ok "  KB scripts -> $KbRuntimeDir\"
+}
+if (Test-Path $KbDocsSrc) {
+    Copy-Item -Path $KbDocsSrc -Destination (Join-Path $InstallRoot "docs\KB_CONVENTIONS.md") -Force
+    Write-Ok "  KB_CONVENTIONS.md -> $InstallRoot\docs\"
+}
+
+Write-Host ""
+Write-Ok "Update complete. System-prompt changes take effect in the next conversation."
+Write-Host ""
