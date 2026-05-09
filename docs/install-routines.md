@@ -340,41 +340,91 @@ Step 2 clones (or pulls) `ttc-agent-framework` before any later step needs it.
 
 Required on every machine before any install/update/migrate routine works.
 
-**Generate key (if you don't have one):**
+> **The full sequence is four small commands.** All install/update/migrate scripts assume this is already done. If `ssh -T git@github.com` fails with `Permission denied (publickey)`, walk through this appendix once and you're set.
+
+### Step 1 — Generate a key (skip if `~/.ssh/id_ed25519` already exists)
+
+**macOS / Linux:**
 
 ```bash
-# macOS / Linux:
 ssh-keygen -t ed25519 -C "$USER@$(hostname -s)"
-# accept default path; passphrase optional but recommended
 ```
 
+**Windows (PowerShell):**
+
 ```powershell
-# Windows:
 ssh-keygen -t ed25519 -C "$env:USERNAME@$env:COMPUTERNAME"
 ```
 
-**Upload to GitHub:**
+**What ssh-keygen will ask you (identical on all platforms):**
+
+```
+Enter file in which to save the key (C:\Users\<you>/.ssh/id_ed25519):
+```
+→ **Press Enter** to accept the default path. Don't type anything else here — every other tool expects the key at the default location.
+
+```
+Enter passphrase (empty for no passphrase):
+Enter same passphrase again:
+```
+→ **Press Enter twice** for no passphrase (simplest). Optional: set a passphrase for an extra layer of protection — you'll then be asked for it on each git push/pull unless you load it into your OS keychain via `ssh-add`.
+
+You'll see confirmation:
+
+```
+Your identification has been saved in C:\Users\<you>\.ssh\id_ed25519
+Your public key has been saved in C:\Users\<you>\.ssh\id_ed25519.pub
+The key fingerprint is: SHA256:<hash> ...
+```
+
+### Step 2 — Make sure gh CLI is logged in
 
 ```bash
-# macOS / Linux:
+gh auth status
+```
+
+If it says "not logged in", run:
+
+```bash
+gh auth login --hostname github.com --git-protocol ssh --web
+```
+
+Follow the device-code flow in your browser.
+
+### Step 3 — Upload the public key to GitHub
+
+**macOS / Linux:**
+
+```bash
 gh ssh-key add ~/.ssh/id_ed25519.pub --title "$USER@$(hostname -s) ($(date +%Y-%m))"
 ```
 
+**Windows (PowerShell):**
+
 ```powershell
-# Windows:
 gh ssh-key add "$env:USERPROFILE\.ssh\id_ed25519.pub" `
   --title "$env:USERNAME@$env:COMPUTERNAME ($(Get-Date -Format 'yyyy-MM'))"
 ```
 
-**Verify:**
+### Step 4 — Verify
 
 ```bash
 ssh -T git@github.com
-# Expected: "Hi <user>! You've successfully authenticated, but GitHub does not provide shell access."
-# Exit code 1 is normal here.
 ```
 
-**Convention for SSH key titles:** `<user>@<machine> (YYYY-MM)`. Example: `joerg@Mac-mini (2026-05)`. The date stamp lets you spot stale keys when rotating.
+Expected output:
+
+```
+Hi <your-github-user>! You've successfully authenticated, but GitHub does not provide shell access.
+```
+
+> **Exit code 1 is normal here** — GitHub closes the connection right after the auth banner because it doesn't grant shell access. The success line is what matters.
+
+If you instead see `Permission denied (publickey)`, the key isn't reaching GitHub yet — re-check Steps 1–3.
+
+### Convention for SSH key titles
+
+`<user>@<machine> (YYYY-MM)`. Examples: `joerg@Mac-mini (2026-05)`, `joerg@DESKTOP-X7K2 (2026-05)`. The date stamp lets you spot stale keys when rotating.
 
 ---
 
