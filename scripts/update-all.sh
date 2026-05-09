@@ -184,7 +184,18 @@ if [[ -d "$AGENTS_DIR" ]]; then
     done
 fi
 
-# 3. Refresh runtime KB scripts from the framework's versioned copy
+# 3. Other repos under AI-Vault root (Claude-Config, brand, Tools/mcp-proton)
+# These live outside Agents/ but are versioned and need the same update treatment.
+echo ""
+log "Updating shared repos..."
+for shared in \
+        "$INSTALL_ROOT/Claude-Config" \
+        "$INSTALL_ROOT/brand" \
+        "$INSTALL_ROOT/Tools/mcp-proton"; do
+    [[ -d "$shared/.git" ]] && pull_repo "$shared"
+done
+
+# 4. Refresh runtime KB scripts from the framework's versioned copy
 echo ""
 log "Refreshing runtime KB scripts..."
 KB_SRC="$FRAMEWORK_DIR/scripts/kb"

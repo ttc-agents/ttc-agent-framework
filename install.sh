@@ -29,7 +29,7 @@ echo "Install root: $INSTALL_ROOT"
 echo ""
 
 # --- 1. Prerequisites ---------------------------------------------------------
-log "Step 1/6: Checking prerequisites"
+log "Step 1/7: Checking prerequisites"
 
 if [[ "$(uname -s)" == "Darwin" ]]; then
     if ! require_cmd brew; then
@@ -64,7 +64,7 @@ fi
 ok "Prerequisites ready"
 
 # --- 2. Claude Code -----------------------------------------------------------
-log "Step 2/6: Installing Claude Code"
+log "Step 2/7: Installing Claude Code"
 if require_cmd claude; then
     echo "  [skip] claude already on PATH ($(claude --version 2>/dev/null || echo installed))"
 else
@@ -73,7 +73,7 @@ fi
 ok "Claude Code ready"
 
 # --- 3. GitHub auth -----------------------------------------------------------
-log "Step 3/6: GitHub authentication"
+log "Step 3/7: GitHub authentication"
 if gh auth status >/dev/null 2>&1; then
     echo "  [skip] gh already authenticated"
 else
@@ -100,7 +100,7 @@ else
 fi
 
 # --- 4. Clone framework -------------------------------------------------------
-log "Step 4/6: Cloning framework"
+log "Step 4/7: Cloning framework"
 mkdir -p "$INSTALL_ROOT"
 if [[ -d "$FRAMEWORK_DIR/.git" ]]; then
     echo "  [skip] framework already cloned — pulling latest"
@@ -111,7 +111,7 @@ fi
 ok "Framework at $FRAMEWORK_DIR"
 
 # --- 5. Discover + install every accessible agent ----------------------------
-log "Step 5/6: Discovering agents you have access to"
+log "Step 5/7: Discovering agents you have access to"
 
 ACCESSIBLE_FILE=$(mktemp)
 gh repo list "$GITHUB_ORG" --limit 200 --json name --jq '.[].name' 2>/dev/null \
@@ -182,8 +182,41 @@ while IFS=$'\t' read -r REPO DIR APPLY FLAGS; do
 done <<< "$INSTALL_LIST"
 ok "Agents installed: ${#INSTALLED_AGENTS[@]}"
 
+# --- 5b. Shared repos (Claude-Config, brand, Tools/mcp-proton) ---------------
+# These live outside Agents/ but are versioned and installed alongside agents.
+log "Step 6/7: Installing shared repos"
+
+SHARED_LIST=$(python3 - "$FRAMEWORK_DIR/install-config.json" <<'PYEOF'
+import json, sys
+cfg = json.load(open(sys.argv[1]))
+for s in cfg.get("shared_repos", []):
+    if s.get("auto_install", True):
+        print(f"{s['repo']}\t{s['path']}")
+PYEOF
+)
+while IFS=$'\t' read -r REPO RELPATH; do
+    [[ -z "$REPO" ]] && continue
+    TARGET="$INSTALL_ROOT/$RELPATH"
+    if [[ -d "$TARGET/.git" ]]; then
+        echo "  [skip] $REPO already cloned at $RELPATH — pulling latest"
+        git -C "$TARGET" pull --ff-only 2>/dev/null || warn "  pull failed"
+    else
+        mkdir -p "$(dirname "$TARGET")"
+        echo "  [clone] $REPO → $RELPATH"
+        git clone "git@github.com:$GITHUB_ORG/$REPO.git" "$TARGET"
+    fi
+    # Per-repo follow-up: mcp-proton needs npm install
+    if [[ "$REPO" == "ttc-mcp-proton-server" ]] && [[ -f "$TARGET/package.json" ]]; then
+        if [[ ! -d "$TARGET/node_modules" ]]; then
+            echo "  [npm] installing mcp-proton dependencies..."
+            (cd "$TARGET" && npm install --silent) || warn "  npm install failed"
+        fi
+    fi
+done <<< "$SHARED_LIST"
+ok "Shared repos installed"
+
 # --- 6. Configure ~/CLAUDE.md -------------------------------------------------
-log "Step 6/6: Configuring ~/CLAUDE.md"
+log "Step 7/7: Configuring ~/CLAUDE.md"
 if [[ ! -f "$CLAUDE_MD" ]]; then
     TEMPLATE="$FRAMEWORK_DIR/CLAUDE.md.template"
     if [[ -f "$TEMPLATE" ]]; then

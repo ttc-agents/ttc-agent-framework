@@ -26,7 +26,16 @@
   },
   "skip_repos": [
     "ttc-agent-framework",
-    "ttc-agent-claude-config"
+    "ttc-agent-claude-config",
+    "ttc-mcp-proton-server",
+    "ttc-brand-standards",
+    "ttc-agent-oracle-staging"
+  ],
+  "shared_repos": [
+    { "repo": "ttc-agent-claude-config",   "path": "Claude-Config",     "auto_install": true,  "note": "User-level Claude config + slash commands. Symlinked from ~/CLAUDE.md and ~/.claude/commands/." },
+    { "repo": "ttc-brand-standards",       "path": "brand",             "auto_install": true,  "note": "TTC standards memos (Excel workbook standard, Claude Design brief spec). Logos/imagery NOT here — read from OneDrive via Agents/Docs/brand_paths.py." },
+    { "repo": "ttc-mcp-proton-server",     "path": "Tools/mcp-proton",  "auto_install": true,  "note": "MCP server for Proton Mail via local Proton Bridge. Requires 1Password item 'Proton Bridge PWD' in 'AI Vault'. Run npm install after clone." },
+    { "repo": "ttc-agent-oracle-staging",  "path": "Agents/Oracle",     "auto_install": false, "note": "Parked Oracle agent staging material (oracle-db-skills, apex-component-modifier, utPLSQL). Not used by any active agent." }
   ],
   "agents": [
     { "repo": "ttc-agent-sap",               "dir": "SAP",               "apply": "sap",            "submodules": true,  "auto_install": true  },
