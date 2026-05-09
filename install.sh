@@ -80,9 +80,24 @@ else
     warn "gh is not authenticated. Starting device-flow login..."
     echo "  A short one-time code will be displayed."
     echo "  Open https://github.com/login/device in any browser and paste the code."
-    gh auth login --hostname github.com --git-protocol https --web
+    echo "  When prompted, choose 'SSH' as preferred git protocol and accept"
+    echo "  uploading your public key — this avoids gh-token-expiry pain later."
+    gh auth login --hostname github.com --git-protocol ssh --web
 fi
-ok "GitHub ready"
+
+# Verify SSH to GitHub actually works. If gh auth login uploaded a new key
+# it should — but we double-check because cron jobs and SSH-spawned shells
+# silently fail if SSH auth is broken.
+if ssh -T -o BatchMode=yes -o StrictHostKeyChecking=accept-new git@github.com 2>&1 | grep -q "successfully authenticated"; then
+    ok "GitHub ready (SSH)"
+else
+    warn "SSH to git@github.com is NOT working yet."
+    warn "Generate + upload a key:"
+    warn "  ssh-keygen -t ed25519 -C \"\$USER@\$(hostname -s)\""
+    warn "  gh ssh-key add ~/.ssh/id_ed25519.pub --title \"\$USER@\$(hostname -s) (\$(date +%Y-%m))\""
+    warn "Re-run this installer once that's done."
+    exit 1
+fi
 
 # --- 4. Clone framework -------------------------------------------------------
 log "Step 4/6: Cloning framework"
@@ -91,7 +106,7 @@ if [[ -d "$FRAMEWORK_DIR/.git" ]]; then
     echo "  [skip] framework already cloned — pulling latest"
     git -C "$FRAMEWORK_DIR" pull --ff-only || warn "pull failed, continuing"
 else
-    gh repo clone "$GITHUB_ORG/$FRAMEWORK_REPO" "$FRAMEWORK_DIR"
+    git clone "git@github.com:$GITHUB_ORG/$FRAMEWORK_REPO.git" "$FRAMEWORK_DIR"
 fi
 ok "Framework at $FRAMEWORK_DIR"
 
@@ -153,9 +168,9 @@ while IFS=$'\t' read -r REPO DIR APPLY FLAGS; do
         fi
     else
         if [[ "$FLAGS" == "true" ]]; then
-            gh repo clone "$GITHUB_ORG/$REPO" "$TARGET" -- --recurse-submodules
+            git clone --recurse-submodules "git@github.com:$GITHUB_ORG/$REPO.git" "$TARGET"
         else
-            gh repo clone "$GITHUB_ORG/$REPO" "$TARGET"
+            git clone "git@github.com:$GITHUB_ORG/$REPO.git" "$TARGET"
         fi
     fi
     if [[ -f "$TARGET/install.sh" ]]; then

@@ -77,11 +77,11 @@ if [[ -d "$TARGET/.git" ]]; then
         git -C "$TARGET" submodule update --init --recursive
     fi
 else
-    echo "[clone] $GITHUB_ORG/$REPO -> $TARGET"
+    echo "[clone] $GITHUB_ORG/$REPO -> $TARGET (SSH)"
     if [[ "$SUBMODULES" == "true" ]]; then
-        gh repo clone "$GITHUB_ORG/$REPO" "$TARGET" -- --recurse-submodules
+        git clone --recurse-submodules "git@github.com:$GITHUB_ORG/$REPO.git" "$TARGET"
     else
-        gh repo clone "$GITHUB_ORG/$REPO" "$TARGET"
+        git clone "git@github.com:$GITHUB_ORG/$REPO.git" "$TARGET"
     fi
 fi
 

@@ -89,9 +89,23 @@ if ($ghAuthOk) {
     Warn "gh is not authenticated. Starting device-flow login..."
     Write-Host "  A short one-time code will be displayed."
     Write-Host "  Open https://github.com/login/device in any browser and paste the code."
-    gh auth login --hostname github.com --git-protocol https --web
+    Write-Host "  When prompted, choose 'SSH' as preferred git protocol and accept"
+    Write-Host "  uploading your public key — this avoids gh-token-expiry pain later."
+    gh auth login --hostname github.com --git-protocol ssh --web
 }
-Ok "GitHub ready"
+
+# Verify SSH to GitHub actually works.
+$sshTest = ssh -T -o BatchMode=yes -o StrictHostKeyChecking=accept-new git@github.com 2>&1
+if ($sshTest -match "successfully authenticated") {
+    Ok "GitHub ready (SSH)"
+} else {
+    Warn "SSH to git@github.com is NOT working yet."
+    Warn "Generate + upload a key:"
+    Warn "  ssh-keygen -t ed25519 -C `"$env:USERNAME@$env:COMPUTERNAME`""
+    Warn "  gh ssh-key add `$env:USERPROFILE\.ssh\id_ed25519.pub --title `"$env:USERNAME@$env:COMPUTERNAME ($(Get-Date -Format yyyy-MM))`""
+    Warn "Re-run this installer once that's done."
+    exit 1
+}
 
 # --- 4. Clone framework ------------------------------------------------------
 Log "Step 4/6: Cloning framework"
@@ -100,7 +114,7 @@ if (Test-Path (Join-Path $FrameworkDir ".git")) {
     Write-Host "  [skip] framework already cloned - pulling latest"
     git -C $FrameworkDir pull --ff-only 2>&1 | Out-Null
 } else {
-    gh repo clone "$GitHubOrg/$FrameworkRepo" $FrameworkDir
+    git clone "git@github.com:$GitHubOrg/$FrameworkRepo.git" $FrameworkDir
 }
 Ok "Framework at $FrameworkDir"
 
@@ -155,10 +169,11 @@ foreach ($agent in $toInstall) {
             git -C $target submodule update --init --recursive 2>&1 | Out-Null
         }
     } else {
+        $sshUrl = "git@github.com:$GitHubOrg/$($agent.repo).git"
         if ($agent.submodules) {
-            gh repo clone "$GitHubOrg/$($agent.repo)" $target -- --recurse-submodules
+            git clone --recurse-submodules $sshUrl $target
         } else {
-            gh repo clone "$GitHubOrg/$($agent.repo)" $target
+            git clone $sshUrl $target
         }
     }
 

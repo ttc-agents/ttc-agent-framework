@@ -59,11 +59,12 @@ if (Test-Path (Join-Path $Target ".git")) {
         git -C $Target submodule update --init --recursive 2>&1 | Out-Null
     }
 } else {
-    Write-Host "[clone] $GitHubOrg/$($agent.repo) -> $Target"
+    Write-Host "[clone] $GitHubOrg/$($agent.repo) -> $Target (SSH)"
+    $sshUrl = "git@github.com:$GitHubOrg/$($agent.repo).git"
     if ($agent.submodules) {
-        gh repo clone "$GitHubOrg/$($agent.repo)" $Target -- --recurse-submodules
+        git clone --recurse-submodules $sshUrl $Target
     } else {
-        gh repo clone "$GitHubOrg/$($agent.repo)" $Target
+        git clone $sshUrl $Target
     }
 }
 

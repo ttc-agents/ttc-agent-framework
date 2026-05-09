@@ -1,5 +1,6 @@
 {
   "github_org": "ttc-agents",
+  "clone_protocol": "ssh",
   "install_root": {
     "mac": "$HOME/AI-Vault",
     "windows": "$env:USERPROFILE\\AI-Vault"

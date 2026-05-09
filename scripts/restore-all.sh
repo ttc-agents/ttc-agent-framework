@@ -37,8 +37,8 @@ for entry in "${REPOS[@]}"; do
         echo "Updating $DIR..."
         git -C "$TARGET" pull --ff-only
     else
-        echo "Cloning $REPO into $DIR..."
-        gh repo clone "$GITHUB_ORG/$REPO" "$TARGET"
+        echo "Cloning $REPO into $DIR (SSH)..."
+        git clone "git@github.com:$GITHUB_ORG/$REPO.git" "$TARGET"
     fi
 done
 
