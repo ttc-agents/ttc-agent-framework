@@ -91,6 +91,8 @@ claude
 
 **Audience:** install already exists; you want today's commits from GitHub.
 
+> **Bootstrap note:** `update-all.sh` lives inside `ttc-agent-framework/scripts/`. If your local framework checkout is missing or very old (i.e. the script doesn't exist yet locally), run the migration first — see § 1.3 for the curl one-liner. The migration script self-bootstraps the framework and then transitions you cleanly to the new layout, after which `update-all.sh` is in place.
+
 **Standard mode (skips repos with uncommitted changes):**
 
 ```bash
@@ -170,29 +172,36 @@ The Mini itself skips the pre-flight automatically (it would SSH to itself).
 2. 1Password item `Proton Bridge PWD` exists in vault `AI Vault` (only matters if you use the Proton MCP)
 3. OneDrive central branding synced locally (only matters for the Docs agent)
 
-**Dry-run first** to see what would change without making any modifications:
+**Bootstrap (one-liner, works even without a local framework checkout):**
 
 ```bash
-bash ~/AI-Vault/ttc-agent-framework/scripts/migrate-to-2026-05.sh --dry-run
+curl -fsSL https://raw.githubusercontent.com/ttc-agents/ttc-agent-framework/main/scripts/migrate-to-2026-05.sh | bash
 ```
 
-**Actual run:**
+The script is self-contained: Step 2 clones (or pulls) `ttc-agent-framework` into `~/AI-Vault/ttc-agent-framework/` before any other step that needs the framework on disk. So the curl path above works whether you have an old framework checkout, a partial one, or nothing at all.
+
+**If you already have the framework cloned locally** (most existing installs), use the local copy instead — same script, same effect:
 
 ```bash
+# Dry-run first to see what would change:
+bash ~/AI-Vault/ttc-agent-framework/scripts/migrate-to-2026-05.sh --dry-run
+
+# Actual run:
 bash ~/AI-Vault/ttc-agent-framework/scripts/migrate-to-2026-05.sh
 ```
 
-**The 7 steps the script performs (all idempotent):**
+**The 8 steps the script performs (all idempotent):**
 
 | Step | What changes |
 |---|---|
-| 1/7 | Verifies `ssh -T git@github.com` succeeds. Aborts with instructions if not. |
-| 2/7 | Converts `https://github.com/...` remotes → `git@github.com:...` for every repo under `~/AI-Vault/`. |
-| 3/7 | Clones `ttc-agent-docs` if missing. Leaves the old `Agents/PPTX/` folder on disk for you to verify + delete manually (safety). |
-| 4/7 | Moves `~/Personal/mcp-proton/` → `~/AI-Vault/Tools/mcp-proton/` and re-clones it as a proper git repo. Patches `~/.claude.json`, `~/Library/Application Support/Claude/claude_desktop_config.json`, and the two Claude-Config copies to (a) point at the new path and (b) remove plaintext `PROTON_PASSWORD` (it's now read from 1Password at server startup). Removes empty `~/Personal/`. |
-| 5/7 | Clones `ttc-brand-standards` into `~/AI-Vault/brand/`. Removes the stale local `brand/imagery/` and `brand/logos/` caches (handles `chflags uchg` if present). Warns if OneDrive central branding isn't mounted. |
-| 6/7 | Symlinks `~/CLAUDE.md` → `Claude-Config/CLAUDE.md` and `~/.claude/commands/` → `Claude-Config/commands/`, backing up any existing files first. |
-| 7/7 | Runs `update-all.sh --force` to land every repo on its current GitHub HEAD. |
+| 1/8 | Verifies `ssh -T git@github.com` succeeds. Aborts with instructions if not — every later step needs SSH. |
+| 2/8 | Bootstrap: clones `ttc-agent-framework` if missing, otherwise pulls latest. Lets the curl one-liner above work end-to-end. |
+| 3/8 | Converts `https://github.com/...` remotes → `git@github.com:...` for every repo under `~/AI-Vault/`. |
+| 4/8 | Clones `ttc-agent-docs` if missing. Leaves the old `Agents/PPTX/` folder on disk for you to verify + delete manually (safety). |
+| 5/8 | Moves `~/Personal/mcp-proton/` → `~/AI-Vault/Tools/mcp-proton/` and re-clones it as a proper git repo. Patches `~/.claude.json`, `~/Library/Application Support/Claude/claude_desktop_config.json`, and the two Claude-Config copies to (a) point at the new path and (b) remove plaintext `PROTON_PASSWORD` (it's now read from 1Password at server startup). Removes empty `~/Personal/`. |
+| 6/8 | Clones `ttc-brand-standards` into `~/AI-Vault/brand/`. Removes the stale local `brand/imagery/` and `brand/logos/` caches (handles `chflags uchg` if present). Warns if OneDrive central branding isn't mounted. |
+| 7/8 | Symlinks `~/CLAUDE.md` → `Claude-Config/CLAUDE.md` and `~/.claude/commands/` → `Claude-Config/commands/`, backing up any existing files first. |
+| 8/8 | Runs `update-all.sh --force` to land every repo on its current GitHub HEAD. |
 
 **Manual finishing touches (reported by the script):**
 
@@ -251,6 +260,8 @@ claude
 
 **Audience:** install already exists; you want today's commits from GitHub.
 
+> **Bootstrap note:** `update-all.ps1` lives inside `ttc-agent-framework\scripts\`. If your local framework checkout is missing or very old, run the migration first — see § 2.3 for the iwr one-liner. The migration script self-bootstraps the framework, after which `update-all.ps1` is in place.
+
 **Standard mode:**
 
 ```powershell
@@ -290,29 +301,36 @@ claude
 
 - **Developer Mode** enabled in `Settings → Privacy & Security → For developers` (lets the script create symlinks without admin rights). If neither Developer Mode nor admin elevation is available, the script transparently falls back to copying files instead of linking — but then your `~/CLAUDE.md` and `~/.claude/commands/` won't auto-pick-up updates from Claude-Config without re-running the migrate script after every Claude-Config change.
 
-**Dry-run first:**
+**Bootstrap (one-liner, works even without a local framework checkout):**
 
 ```powershell
-& "$env:USERPROFILE\AI-Vault\ttc-agent-framework\scripts\migrate-to-2026-05.ps1" -DryRun
+iwr https://raw.githubusercontent.com/ttc-agents/ttc-agent-framework/main/scripts/migrate-to-2026-05.ps1 -UseBasicParsing | iex
 ```
 
-**Actual run:**
+Step 2 clones (or pulls) `ttc-agent-framework` before any later step needs it.
+
+**If you already have the framework cloned locally:**
 
 ```powershell
+# Dry-run first:
+& "$env:USERPROFILE\AI-Vault\ttc-agent-framework\scripts\migrate-to-2026-05.ps1" -DryRun
+
+# Actual run:
 & "$env:USERPROFILE\AI-Vault\ttc-agent-framework\scripts\migrate-to-2026-05.ps1"
 ```
 
-**The 7 steps:** identical structure to the Mac migration, with these Windows-specific differences:
+**The 8 steps:** identical structure to the Mac migration, with these Windows-specific differences:
 
 | Step | Windows specifics |
 |---|---|
-| 1/7 | Same SSH check |
-| 2/7 | Same HTTPS → SSH conversion |
-| 3/7 | Old `Agents\PPTX\` preserved on disk; the manual cleanup command shown is `Remove-Item -Recurse -Force` |
-| 4/7 | Reads `%APPDATA%\Claude\claude_desktop_config.json` instead of `~/Library/...` for the Claude Desktop config. Strips PROTON_PASSWORD using PowerShell's `ConvertFrom-Json -AsHashtable` |
-| 5/7 | Probes 3 OneDrive path candidates (SharePoint sync paths vary on Windows): `%USERPROFILE%\TTCGlobal\Branding...`, `%USERPROFILE%\OneDrive - TTCGlobal\...`, `%OneDrive%\Branding...`. Warns if none match. No `chflags` cleanup needed (Windows doesn't have file flags). |
-| 6/7 | Symlinks created via `New-Item -ItemType SymbolicLink`. Falls back to copy + warning if symlink creation fails |
-| 7/7 | Runs `update-all.ps1 -Force` |
+| 1/8 | Same SSH check |
+| 2/8 | Same self-bootstrap of the framework |
+| 3/8 | Same HTTPS → SSH conversion |
+| 4/8 | Old `Agents\PPTX\` preserved on disk; the manual cleanup command shown is `Remove-Item -Recurse -Force` |
+| 5/8 | Reads `%APPDATA%\Claude\claude_desktop_config.json` instead of `~/Library/...` for the Claude Desktop config. Strips PROTON_PASSWORD using PowerShell's `ConvertFrom-Json -AsHashtable` |
+| 6/8 | Probes 3 OneDrive path candidates (SharePoint sync paths vary on Windows): `%USERPROFILE%\TTCGlobal\Branding...`, `%USERPROFILE%\OneDrive - TTCGlobal\...`, `%OneDrive%\Branding...`. Warns if none match. No `chflags` cleanup needed (Windows doesn't have file flags). |
+| 7/8 | Symlinks created via `New-Item -ItemType SymbolicLink`. Falls back to copy + warning if symlink creation fails |
+| 8/8 | Runs `update-all.ps1 -Force` |
 
 **Note on symlinks:** Windows requires elevated privileges OR Developer Mode for symlinks. If you skipped enabling Developer Mode, the migrate script will warn you and copy the file instead. The copy version is functional but won't track upstream Claude-Config edits — you'll need to re-run migrate periodically or just enable Developer Mode and re-run once.
 

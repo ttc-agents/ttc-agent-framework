@@ -74,7 +74,7 @@ Write-Host "Install root: $InstallRoot"
 Write-Host ""
 
 # ─── 1. Verify SSH to GitHub works (everything depends on this) ─────────────
-Write-Log "Step 1/7: Verify SSH access to GitHub"
+Write-Log "Step 1/8: Verify SSH access to GitHub"
 $sshOut = & ssh -T -o BatchMode=yes -o StrictHostKeyChecking=accept-new git@github.com 2>&1
 if ($sshOut -match "successfully authenticated") {
     Write-Ok "SSH to git@github.com works"
@@ -86,8 +86,29 @@ if ($sshOut -match "successfully authenticated") {
     exit 1
 }
 
-# ─── 2. Convert HTTPS remotes to SSH ────────────────────────────────────────
-Write-Log "Step 2/7: Convert HTTPS remotes to SSH"
+# ─── 2. Bootstrap: ensure ttc-agent-framework is present + current ──────────
+# The migrate script normally lives inside the framework, but it can also be
+# fetched standalone (`iwr ... migrate-to-2026-05.ps1 | iex`). Either way,
+# every later step needs the framework's scripts on disk.
+Write-Log "Step 2/8: Bootstrap framework"
+$frameworkDir = Join-Path $InstallRoot "ttc-agent-framework"
+if (Test-Path (Join-Path $frameworkDir ".git")) {
+    Write-Log "  Framework present -- pulling latest"
+    Invoke-OrDry -Description "git -C `"$frameworkDir`" pull --ff-only" -Block {
+        & git -C $frameworkDir pull --ff-only --quiet 2>$null
+        if ($LASTEXITCODE -ne 0) { Write-WarnMsg "  pull failed -- continuing" }
+    }
+} else {
+    Write-Log "  Framework not yet on disk -- cloning"
+    Invoke-OrDry -Description "git clone framework into $frameworkDir" -Block {
+        New-Item -ItemType Directory -Path $InstallRoot -Force | Out-Null
+        & git clone "git@github.com:$GithubOrg/ttc-agent-framework.git" $frameworkDir
+    }
+}
+Write-Ok "Framework at $frameworkDir"
+
+# ─── 3. Convert HTTPS remotes to SSH ────────────────────────────────────────
+Write-Log "Step 3/8: Convert HTTPS remotes to SSH"
 $converted = 0
 $repoDirs = @()
 if (Test-Path $AgentsDir) {
@@ -114,7 +135,7 @@ foreach ($d in $repoDirs) {
 Write-Ok "$converted remote(s) converted to SSH"
 
 # ─── 3. Old PPTX agent → Docs agent ─────────────────────────────────────────
-Write-Log "Step 3/7: Migrate PPTX agent to Docs"
+Write-Log "Step 4/8: Migrate PPTX agent to Docs"
 $oldPptx = Join-Path $AgentsDir "PPTX"
 $newDocs = Join-Path $AgentsDir "Docs"
 if ((Test-Path $oldPptx) -and -not (Test-Path $newDocs)) {
@@ -137,7 +158,7 @@ if ((Test-Path $oldPptx) -and -not (Test-Path $newDocs)) {
 Write-Ok "Docs agent in place"
 
 # ─── 4. mcp-proton: ~/Personal → AI-Vault/Tools, into git, password to 1P ─
-Write-Log "Step 4/7: Relocate + version mcp-proton"
+Write-Log "Step 5/8: Relocate + version mcp-proton"
 $toolsProton = Join-Path $InstallRoot "Tools\mcp-proton"
 $personalProton = Join-Path $env:USERPROFILE "Personal\mcp-proton"
 if (-not (Test-Path (Join-Path $toolsProton ".git"))) {
@@ -225,7 +246,7 @@ if ((Test-Path $personalDir) -and -not (Get-ChildItem -Path $personalDir -Force 
 }
 
 # ─── 5. Brand-split: clone ttc-brand-standards, drop old imagery/logos ──────
-Write-Log "Step 5/7: Brand split (logos + imagery -> OneDrive)"
+Write-Log "Step 6/8: Brand split (logos + imagery -> OneDrive)"
 $brandDir = Join-Path $InstallRoot "brand"
 if (-not (Test-Path (Join-Path $brandDir ".git"))) {
     if (Test-Path $brandDir) {
@@ -283,7 +304,7 @@ if ($onedriveBrand) {
 }
 
 # ─── 6. ~/CLAUDE.md → symlink to Claude-Config ──────────────────────────────
-Write-Log "Step 6/7: Ensure CLAUDE.md is a symlink to Claude-Config"
+Write-Log "Step 7/8: Ensure CLAUDE.md is a symlink to Claude-Config"
 $claudeMd  = Join-Path $env:USERPROFILE "CLAUDE.md"
 $ccConfig  = Join-Path $InstallRoot "Claude-Config"
 $targetMd  = Join-Path $ccConfig "CLAUDE.md"
@@ -334,7 +355,7 @@ if (Test-Path $commandsTarget) {
 }
 
 # ─── 7. Final pull-everything-current ───────────────────────────────────────
-Write-Log "Step 7/7: Pull every repo to its current GitHub state"
+Write-Log "Step 8/8: Pull every repo to its current GitHub state"
 $updateAll = Join-Path $InstallRoot "ttc-agent-framework\scripts\update-all.ps1"
 if ($DryRun) {
     Write-Host "  DRY: would run update-all.ps1 -Force" -ForegroundColor DarkGray
