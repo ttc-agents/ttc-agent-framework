@@ -23,11 +23,11 @@ from datetime import datetime
 
 # ── Configuration ─────────────────────────────────────────────────────────────
 
-SOURCE_ROOT = Path("/Users/joergpietzsch/Library/CloudStorage/OneDrive-TTCGlobal/Sales/Customer")
-KB_ROOT     = Path("/Users/joergpietzsch/AI-Vault/Claude Folder/Knowledge Base")
+SOURCE_ROOT = Path("{{HOME}}/Library/CloudStorage/OneDrive-TTCGlobal/Sales/Customer")
+KB_ROOT     = Path("{{AI_VAULT}}/Claude Folder/Knowledge Base")
 INDEX_FILE  = KB_ROOT / "_index.json"
 REGISTRY_FILE = KB_ROOT / "_customer_registry.json"
-VENV_PYTHON = Path("/Users/joergpietzsch/AI-Vault/.venv/bin/python3")
+VENV_PYTHON = Path("{{AI_VAULT}}/.venv/bin/python3")
 
 SUPPORTED_EXTENSIONS = {".docx", ".pptx", ".pdf"}
 

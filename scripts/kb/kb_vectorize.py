@@ -25,7 +25,7 @@ from sentence_transformers import SentenceTransformer
 
 # ── Configuration ─────────────────────────────────────────────────────────────
 
-KB_ROOT = Path("/Users/joergpietzsch/AI-Vault/Claude Folder/Knowledge Base")
+KB_ROOT = Path("{{AI_VAULT}}/Claude Folder/Knowledge Base")
 REGISTRY_FILE = KB_ROOT / "_customer_registry.json"
 VECTOR_DB_PATH = KB_ROOT / "_vectordb"
 VECTOR_INDEX_FILE = KB_ROOT / "_vector_index.json"

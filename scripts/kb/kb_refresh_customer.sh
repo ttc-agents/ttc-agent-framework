@@ -9,7 +9,7 @@
 
 set -euo pipefail
 
-VAULT_ROOT="/Users/joergpietzsch/AI-Vault"
+VAULT_ROOT="{{AI_VAULT}}"
 CONVERTER="$VAULT_ROOT/Claude Folder/convert_to_knowledge_base.py"
 VECTORIZER="$VAULT_ROOT/Claude Folder/kb_vectorize.py"
 VENV_PY="$VAULT_ROOT/.venv/bin/python3"

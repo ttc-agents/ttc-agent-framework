@@ -9,5 +9,5 @@
 # Idempotent. Cheap (filesystem scan only). Intended for agent session-start.
 
 set -euo pipefail
-VAULT="/Users/joergpietzsch/AI-Vault"
+VAULT="{{AI_VAULT}}"
 "$VAULT/.venv/bin/python3" "$VAULT/Claude Folder/kb_discover_customers.py" "$@"

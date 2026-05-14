@@ -13,7 +13,7 @@
 
 set -euo pipefail
 
-VAULT_ROOT="/Users/joergpietzsch/AI-Vault"
+VAULT_ROOT="{{AI_VAULT}}"
 KB_ROOT="$VAULT_ROOT/Claude Folder/Knowledge Base"
 REGISTRY="$KB_ROOT/_customer_registry.json"
 VENV_PY="$VAULT_ROOT/.venv/bin/python3"
@@ -61,8 +61,8 @@ echo "Slug         : $SLUG"
 
 # ── infer primary folder if not given ────────────────────────────────────────
 if [[ -z "$PRIMARY" ]]; then
-  SALES_ROOT="/Users/joergpietzsch/Library/CloudStorage/OneDrive-TTCGlobal/Sales/Customer"
-  DELIVERY_ROOT="/Users/joergpietzsch/Library/CloudStorage/OneDrive-TTCGlobal/Delivery"
+  SALES_ROOT="{{HOME}}/Library/CloudStorage/OneDrive-TTCGlobal/Sales/Customer"
+  DELIVERY_ROOT="{{HOME}}/Library/CloudStorage/OneDrive-TTCGlobal/Delivery"
 
   # Try exact match under Sales/Customer/<Region>/
   CANDIDATES=$(find "$SALES_ROOT" -maxdepth 2 -type d -iname "$DISPLAY_NAME" 2>/dev/null | head -5)
