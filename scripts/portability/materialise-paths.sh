@@ -84,7 +84,13 @@ materialise_dir() {
             -name '*.cfg' -o \
             -name '*.ini' -o \
             -name '*.plist' -o \
-            -name '*.xml' \
+            -name '*.xml' -o \
+            -name '*.ts' -o \
+            -name '*.tsx' -o \
+            -name '*.js' -o \
+            -name '*.jsx' -o \
+            -name '*.mjs' -o \
+            -name '*.cjs' \
         \) -print | while read -r f; do
             materialise_file "$f" || echo "FAILED: $f" >&2
         done
