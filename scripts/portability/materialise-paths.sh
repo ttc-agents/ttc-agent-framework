@@ -82,7 +82,9 @@ materialise_dir() {
             -name '*.toml' -o \
             -name '*.txt' -o \
             -name '*.cfg' -o \
-            -name '*.ini' \
+            -name '*.ini' -o \
+            -name '*.plist' -o \
+            -name '*.xml' \
         \) -print | while read -r f; do
             materialise_file "$f" || echo "FAILED: $f" >&2
         done

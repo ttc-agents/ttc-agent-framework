@@ -175,6 +175,7 @@ iwr https://raw.githubusercontent.com/ttc-agents/ttc-agent-framework/main/instal
 - Asks you to log into GitHub so it can download the agent repositories you have been granted access to.
 - **Asks GitHub which TTC agent repositories you have read access to**, and downloads every single one. You do not have to know which agents exist — the installer figures it out based on your team memberships. A pre-sales consultant ends up with Tender, TOM, PPTX, Test and SAP; a test engineer gets Test, TAF and PPTX; and so on.
 - Writes a small configuration file called `CLAUDE.md` in your home directory so Claude Code knows about the agents.
+- **Rewrites paths in the downloaded agent files so they point to your machine.** Agent prompts on GitHub use the placeholders `{{AI_VAULT}}` and `{{HOME}}` instead of a hardcoded path. The installer substitutes these for your real `AI-Vault` and home directory, so the agent can find its memory, scripts, and KB on your laptop without any manual editing. The same step runs again on every `update-all` so freshly-pulled files stay correct.
 
 ---
 

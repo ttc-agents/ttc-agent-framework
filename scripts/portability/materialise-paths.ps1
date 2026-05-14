@@ -56,7 +56,7 @@ $HomeRootFwd = $HomeRoot -replace '\\', '/'
 # File extensions we treat as text.
 $TextExtensions = @(
     '.md', '.py', '.sh', '.json', '.ps1', '.yml', '.yaml',
-    '.toml', '.txt', '.cfg', '.ini'
+    '.toml', '.txt', '.cfg', '.ini', '.plist', '.xml'
 )
 
 # Directory names to prune.
