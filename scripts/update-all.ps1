@@ -172,6 +172,35 @@ if (Test-Path $KbDocsSrc) {
     Write-Ok "  KB_CONVENTIONS.md -> $InstallRoot\docs\"
 }
 
+# 5. Materialise {{AI_VAULT}} / {{HOME}} placeholders in newly-pulled files.
+# Idempotent -- files with no placeholders are skipped.
+Write-Host ""
+Write-Log "Materialising path placeholders..."
+$Materialiser = Join-Path $FrameworkDir "scripts\portability\materialise-paths.ps1"
+if (Test-Path $Materialiser) {
+    $env:TTC_AI_VAULT = $InstallRoot
+    $env:TTC_HOME     = $env:USERPROFILE
+    if (Test-Path $AgentsDir) {
+        Get-ChildItem -Path $AgentsDir -Directory | ForEach-Object {
+            if (Test-Path (Join-Path $_.FullName ".git")) {
+                try { & $Materialiser -Path $_.FullName | Out-Null } catch { Write-WarnMsg "  materialise failed for $($_.Name): $_" }
+            }
+        }
+    }
+    foreach ($shared in @(
+        (Join-Path $InstallRoot "Claude-Config"),
+        (Join-Path $InstallRoot "brand"),
+        (Join-Path $InstallRoot "Tools\mcp-proton")
+    )) {
+        if (Test-Path (Join-Path $shared ".git")) {
+            try { & $Materialiser -Path $shared | Out-Null } catch { Write-WarnMsg "  materialise failed for $shared: $_" }
+        }
+    }
+    Write-Ok "  Placeholders materialised across agents + shared repos"
+} else {
+    Write-WarnMsg "  Materialiser not found at $Materialiser -- skipped"
+}
+
 Write-Host ""
 Write-Ok "Update complete. System-prompt changes take effect in the next conversation."
 Write-Host ""

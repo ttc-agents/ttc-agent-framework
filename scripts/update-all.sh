@@ -216,6 +216,30 @@ if [[ -f "$KB_DOCS_SRC" ]]; then
     ok  "  KB_CONVENTIONS.md → $INSTALL_ROOT/docs/"
 fi
 
+# 5. Materialise {{AI_VAULT}} / {{HOME}} placeholders in newly-pulled files.
+# Idempotent — files with no placeholders are skipped. Runs on every update
+# so freshly-pulled files always reflect this machine's real paths.
+echo ""
+log "Materialising path placeholders..."
+MATERIALISER="$FRAMEWORK_DIR/scripts/portability/materialise-paths.sh"
+if [[ -x "$MATERIALISER" ]]; then
+    export TTC_AI_VAULT="$INSTALL_ROOT" TTC_HOME="$HOME"
+    if [[ -d "$AGENTS_DIR" ]]; then
+        for agent in "$AGENTS_DIR"/*/; do
+            [[ -d "${agent}.git" ]] && "$MATERIALISER" "${agent%/}" >/dev/null 2>&1 || true
+        done
+    fi
+    for shared in \
+            "$INSTALL_ROOT/Claude-Config" \
+            "$INSTALL_ROOT/brand" \
+            "$INSTALL_ROOT/Tools/mcp-proton"; do
+        [[ -d "$shared/.git" ]] && "$MATERIALISER" "$shared" >/dev/null 2>&1 || true
+    done
+    ok  "  Placeholders materialised across agents + shared repos"
+else
+    warn "  Materialiser not found at $MATERIALISER — skipped"
+fi
+
 echo ""
 ok  "Update complete. System-prompt changes take effect in the next conversation."
 echo ""

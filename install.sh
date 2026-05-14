@@ -173,6 +173,12 @@ while IFS=$'\t' read -r REPO DIR APPLY FLAGS; do
             git clone "git@github.com:$GITHUB_ORG/$REPO.git" "$TARGET"
         fi
     fi
+    # Materialise {{AI_VAULT}} / {{HOME}} placeholders to this machine's paths.
+    if [[ -x "$FRAMEWORK_DIR/scripts/portability/materialise-paths.sh" ]]; then
+        TTC_AI_VAULT="$INSTALL_ROOT" TTC_HOME="$HOME" \
+            "$FRAMEWORK_DIR/scripts/portability/materialise-paths.sh" "$TARGET" >/dev/null \
+            || warn "    materialise-paths failed for $APPLY"
+    fi
     if [[ -f "$TARGET/install.sh" ]]; then
         (cd "$TARGET" && bash install.sh) || warn "    $APPLY install.sh exited non-zero"
     else
@@ -204,6 +210,12 @@ while IFS=$'\t' read -r REPO RELPATH; do
         mkdir -p "$(dirname "$TARGET")"
         echo "  [clone] $REPO → $RELPATH"
         git clone "git@github.com:$GITHUB_ORG/$REPO.git" "$TARGET"
+    fi
+    # Materialise placeholders in shared repos too.
+    if [[ -x "$FRAMEWORK_DIR/scripts/portability/materialise-paths.sh" ]]; then
+        TTC_AI_VAULT="$INSTALL_ROOT" TTC_HOME="$HOME" \
+            "$FRAMEWORK_DIR/scripts/portability/materialise-paths.sh" "$TARGET" >/dev/null \
+            || warn "  materialise-paths failed for $REPO"
     fi
     # Per-repo follow-up: mcp-proton needs npm install
     if [[ "$REPO" == "ttc-mcp-proton-server" ]] && [[ -f "$TARGET/package.json" ]]; then

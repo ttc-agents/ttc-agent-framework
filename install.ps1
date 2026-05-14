@@ -177,6 +177,18 @@ foreach ($agent in $toInstall) {
         }
     }
 
+    # Materialise {{AI_VAULT}} / {{HOME}} placeholders for this machine.
+    $materialiser = Join-Path $FrameworkDir "scripts\portability\materialise-paths.ps1"
+    if (Test-Path $materialiser) {
+        $env:TTC_AI_VAULT = $InstallRoot
+        $env:TTC_HOME     = $env:USERPROFILE
+        try {
+            & $materialiser -Path $target | Out-Null
+        } catch {
+            Warn "    materialise-paths failed for $($agent.apply): $_"
+        }
+    }
+
     $installPs1 = Join-Path $target "install.ps1"
     if (Test-Path $installPs1) {
         Push-Location $target
