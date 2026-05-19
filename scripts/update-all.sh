@@ -235,7 +235,14 @@ if [[ -x "$MATERIALISER" ]]; then
             "$INSTALL_ROOT/Tools/mcp-proton"; do
         [[ -d "$shared/.git" ]] && "$MATERIALISER" "$shared" >/dev/null 2>&1 || true
     done
-    ok  "  Placeholders materialised across agents + shared repos"
+    # Non-repo directories that still need materialising (sanitised content arrives
+    # via Syncthing from a machine where the path IS in a repo). Run unconditionally
+    # — materialiser is idempotent and only rewrites files that have placeholders.
+    for nonrepo in \
+            "$INSTALL_ROOT/Claude Folder"; do
+        [[ -d "$nonrepo" ]] && "$MATERIALISER" "$nonrepo" >/dev/null 2>&1 || true
+    done
+    ok  "  Placeholders materialised across agents + shared repos + Claude Folder"
 else
     warn "  Materialiser not found at $MATERIALISER — skipped"
 fi

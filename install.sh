@@ -272,6 +272,14 @@ if [[ -d "$KB_SRC" ]]; then
     cp "$KB_SRC/convert_to_knowledge_base.py" "$KB_RUNTIME_DIR/"
     cp "$KB_SRC/kb_vectorize.py"            "$KB_RUNTIME_DIR/"
     chmod +x "$KB_RUNTIME_DIR/"kb_*.sh 2>/dev/null || true
+    # Materialise placeholders in the freshly-copied KB scripts. Source files
+    # in scripts/kb/ may be sanitised (committed form) — cp doesn't substitute,
+    # so run the materialiser on the destination explicitly.
+    if [[ -x "$FRAMEWORK_DIR/scripts/portability/materialise-paths.sh" ]]; then
+        TTC_AI_VAULT="$INSTALL_ROOT" TTC_HOME="$HOME" \
+            "$FRAMEWORK_DIR/scripts/portability/materialise-paths.sh" "$KB_RUNTIME_DIR" >/dev/null \
+            || warn "  materialise-paths failed for $KB_RUNTIME_DIR"
+    fi
     ok "KB scripts deployed to $KB_RUNTIME_DIR/"
 fi
 if [[ -f "$KB_DOCS_SRC" ]]; then

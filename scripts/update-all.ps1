@@ -196,7 +196,17 @@ if (Test-Path $Materialiser) {
             try { & $Materialiser -Path $shared | Out-Null } catch { Write-WarnMsg "  materialise failed for $shared: $_" }
         }
     }
-    Write-Ok "  Placeholders materialised across agents + shared repos"
+    # Non-repo directories that still need materialising (sanitised content arrives
+    # via Syncthing from a machine where the path IS in a repo). Run unconditionally
+    # -- materialiser is idempotent and only rewrites files that have placeholders.
+    foreach ($nonrepo in @(
+        (Join-Path $InstallRoot "Claude Folder")
+    )) {
+        if (Test-Path $nonrepo) {
+            try { & $Materialiser -Path $nonrepo | Out-Null } catch { Write-WarnMsg "  materialise failed for $nonrepo: $_" }
+        }
+    }
+    Write-Ok "  Placeholders materialised across agents + shared repos + Claude Folder"
 } else {
     Write-WarnMsg "  Materialiser not found at $Materialiser -- skipped"
 }
