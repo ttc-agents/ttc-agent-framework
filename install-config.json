@@ -200,16 +200,51 @@
       "auto_install": true
     },
     {
-      "repo": "ttc-agent-leads",
-      "dir": "Leads",
-      "apply": "bwbm | vkb | dubai-holding | cbuae | qatar-energy | dib | customer <slug>",
+      "repo": "ttc-agent-curator",
+      "dir": "Curator",
+      "apply": "curator",
       "submodules": false,
       "auto_install": true
     },
     {
-      "repo": "ttc-agent-curator",
-      "dir": "Curator",
-      "apply": "curator",
+      "repo": "ttc-agent-lead-bwbm",
+      "dir": "Leads/bwbm",
+      "apply": "bwbm",
+      "submodules": false,
+      "auto_install": true
+    },
+    {
+      "repo": "ttc-agent-lead-vkb",
+      "dir": "Leads/vkb",
+      "apply": "vkb",
+      "submodules": false,
+      "auto_install": true
+    },
+    {
+      "repo": "ttc-agent-lead-dubai-holding",
+      "dir": "Leads/dubai-holding",
+      "apply": "dubai-holding",
+      "submodules": false,
+      "auto_install": true
+    },
+    {
+      "repo": "ttc-agent-lead-cbuae",
+      "dir": "Leads/cbuae",
+      "apply": "cbuae",
+      "submodules": false,
+      "auto_install": true
+    },
+    {
+      "repo": "ttc-agent-lead-qatar-energy",
+      "dir": "Leads/qatar-energy",
+      "apply": "qatar-energy",
+      "submodules": false,
+      "auto_install": true
+    },
+    {
+      "repo": "ttc-agent-lead-dib",
+      "dir": "Leads/dib",
+      "apply": "dib",
       "submodules": false,
       "auto_install": true
     }

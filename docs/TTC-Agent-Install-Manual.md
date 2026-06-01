@@ -36,7 +36,7 @@ When you finish you will have the full Customer-Lead architecture described abov
 
 You installed the agents earlier (the older "flat" set — `apply tender`, `apply sap`, and so on) and want the new **Customer-Lead + Curator** model. This is a quick, one-time upgrade:
 
-1. **Ask Joerg for access to the two new repositories** if you don't already have it: **`ttc-agent-leads`** and **`ttc-agent-curator`**. He adds your GitHub account to the team; accept the GitHub invitation email (same as for any agent).
+1. **Ask Joerg for the access you need.** Customer Leads are **one repository per client** — `ttc-agent-lead-bwbm`, `ttc-agent-lead-vkb`, `ttc-agent-lead-dubai-holding`, `ttc-agent-lead-cbuae`, `ttc-agent-lead-qatar-energy`, `ttc-agent-lead-dib` — and each is shared **only with that client's team**, so you receive only the clients you actually work on (never "all clients"). Also ask for **`ttc-agent-curator`** (governance; shared with everyone). Joerg adds your GitHub account to the right teams; accept the GitHub invitation email. The shared Lead scaffolding and the generic `apply customer <name>` Lead arrive automatically with the framework — no extra access needed.
 
 2. **Re-run the one-line installer.** ⚠️ Do *not* rely on `update-all` for this step — `update-all` only pulls repos you already have and will **not** clone the two new ones. The installer is idempotent and is the correct upgrade path:
 
@@ -49,7 +49,7 @@ You installed the agents earlier (the older "flat" set — `apply tender`, `appl
     iwr https://raw.githubusercontent.com/ttc-agents/ttc-agent-framework/main/install.ps1 | iex
     ```
 
-    It updates the framework, **clones the new Leads and Curator agents**, deploys the restructure/governance tools, and generates the capability dispatch sub-agents (`cap-*`). Everything you already had is left untouched, and your existing customer registry is preserved (not overwritten).
+    It updates the framework, **clones the Customer-Lead repos you have access to plus Curator**, lays down the shared Lead scaffolding, deploys the governance/restructure tools, and generates the capability dispatch sub-agents (`cap-*`). Everything you already had is left untouched, and your existing customer registry is preserved (not overwritten).
 
 3. **Verify.** Open a *new* terminal, type `claude`, then try:
     ```

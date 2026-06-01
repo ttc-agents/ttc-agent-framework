@@ -320,7 +320,18 @@ if [[ -d "$RESTRUCT_SRC" ]]; then
         "$FRAMEWORK_DIR/scripts/portability/materialise-paths.sh" "$RESTRUCT_DEST" >/dev/null 2>&1 || true
     ok "Restructure tools deployed to $RESTRUCT_DEST/"
 fi
-# Generate capability dispatch sub-agents (cap-*) into ~/.claude/agents/ (Leads repo provides the generator).
+# Deploy the customer-free Lead scaffolding (_template, _generic, _partition-law.md, _dispatch).
+# The per-client Lead repos (ttc-agent-lead-*) clone into Agents/Leads/<slug>/ via the agents loop;
+# this lays the shared scaffolding alongside them.
+LEADS_SCAFFOLD_SRC="$FRAMEWORK_DIR/leads"
+if [[ -d "$LEADS_SCAFFOLD_SRC" ]]; then
+    mkdir -p "$AGENTS_DIR/Leads"
+    cp -R "$LEADS_SCAFFOLD_SRC/." "$AGENTS_DIR/Leads/"
+    TTC_AI_VAULT="$INSTALL_ROOT" TTC_HOME="$HOME" \
+        "$FRAMEWORK_DIR/scripts/portability/materialise-paths.sh" "$AGENTS_DIR/Leads" >/dev/null 2>&1 || true
+    ok "Lead scaffolding deployed to $AGENTS_DIR/Leads/"
+fi
+# Generate capability dispatch sub-agents (cap-*) into ~/.claude/agents/ (scaffolding provides the generator).
 DISPATCH_GEN="$AGENTS_DIR/Leads/_dispatch/build-capability-subagents.py"
 if [[ -f "$DISPATCH_GEN" ]]; then
     if python3 "$DISPATCH_GEN" >/dev/null 2>&1; then
