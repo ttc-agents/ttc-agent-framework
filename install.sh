@@ -287,9 +287,16 @@ if [[ -f "$KB_DOCS_SRC" ]]; then
     ok "KB_CONVENTIONS.md deployed to $INSTALL_ROOT/docs/"
 fi
 REGISTRY="$KB_RUNTIME_DIR/Knowledge Base/_customer_registry.json"
+REGISTRY_SEED="$KB_SRC/_customer_registry.seed.json"
 if [[ ! -f "$REGISTRY" ]]; then
     mkdir -p "$(dirname "$REGISTRY")"
-    cat > "$REGISTRY" <<'JSON'
+    if [[ -f "$REGISTRY_SEED" ]]; then
+        cp "$REGISTRY_SEED" "$REGISTRY"
+        TTC_AI_VAULT="$INSTALL_ROOT" TTC_HOME="$HOME" \
+            "$FRAMEWORK_DIR/scripts/portability/materialise-paths.sh" "$REGISTRY" >/dev/null 2>&1 || true
+        ok "Customer registry seeded from team seed at $REGISTRY"
+    else
+        cat > "$REGISTRY" <<'JSON'
 {
   "schema_version": "1.0",
   "last_updated": "",
@@ -297,7 +304,30 @@ if [[ ! -f "$REGISTRY" ]]; then
   "customers": {}
 }
 JSON
-    ok "Empty customer registry seeded at $REGISTRY"
+        ok "Empty customer registry seeded at $REGISTRY"
+    fi
+fi
+
+# --- 6c. Restructure tooling + capability dispatch sub-agents -----------------
+log "Step 6c/6: Installing restructure tools + capability dispatch defs"
+RESTRUCT_SRC="$FRAMEWORK_DIR/scripts/restructure"
+RESTRUCT_DEST="$INSTALL_ROOT/scripts/restructure"
+if [[ -d "$RESTRUCT_SRC" ]]; then
+    mkdir -p "$RESTRUCT_DEST"
+    cp -R "$RESTRUCT_SRC/." "$RESTRUCT_DEST/"
+    [[ -f "$INSTALL_ROOT/scripts/__init__.py" ]] || touch "$INSTALL_ROOT/scripts/__init__.py"
+    TTC_AI_VAULT="$INSTALL_ROOT" TTC_HOME="$HOME" \
+        "$FRAMEWORK_DIR/scripts/portability/materialise-paths.sh" "$RESTRUCT_DEST" >/dev/null 2>&1 || true
+    ok "Restructure tools deployed to $RESTRUCT_DEST/"
+fi
+# Generate capability dispatch sub-agents (cap-*) into ~/.claude/agents/ (Leads repo provides the generator).
+DISPATCH_GEN="$AGENTS_DIR/Leads/_dispatch/build-capability-subagents.py"
+if [[ -f "$DISPATCH_GEN" ]]; then
+    if python3 "$DISPATCH_GEN" >/dev/null 2>&1; then
+        ok "Capability dispatch defs (cap-*) installed to ~/.claude/agents/"
+    else
+        warn "dispatch generator returned non-zero — run it manually: python3 $DISPATCH_GEN"
+    fi
 fi
 
 # --- 7. Minimal MCP config ----------------------------------------------------

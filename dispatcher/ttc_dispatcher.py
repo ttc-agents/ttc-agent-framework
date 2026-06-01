@@ -2,18 +2,15 @@
 """
 TTC Task Dispatcher
 
-Replaces multiple LaunchAgents with a single dispatcher.
-Runs periodically via launchd (e.g. StartInterval: 900 = every 15 min).
+Replaces 7 separate LaunchAgents with a single dispatcher.
+Runs every 15 minutes via launchd (StartInterval: 900).
 Checks scheduled tasks and file watches, executing as needed.
-
-Configuration is loaded from dispatcher-config.json (same directory).
 
 Usage:
     python3 ttc_dispatcher.py              # normal run
     python3 ttc_dispatcher.py --dry-run    # show what would run, don't execute
     python3 ttc_dispatcher.py --force NAME # force-run a specific task
     python3 ttc_dispatcher.py --status     # show state and next fire times
-    python3 ttc_dispatcher.py --config /path/to/config.json  # use custom config
 """
 
 import fcntl
@@ -24,57 +21,108 @@ import sys
 from datetime import datetime, time, timedelta
 from pathlib import Path
 
-# ── Config loading ────────────────────────────────────────────────────────────
+# ── Paths ──────────────────────────────────────────────────────────────────────
 
-DEFAULT_CONFIG = Path(__file__).parent / "dispatcher-config.json"
+BASE_DIR = Path("{{AI_VAULT}}")
+VENV_PYTHON = str(BASE_DIR / ".venv/bin/python3")
+STATE_FILE = BASE_DIR / "Agents/.dispatcher-state.json"
+LOCK_FILE = Path.home() / ".ttc-dispatcher.lock"
 
+# ── Scheduled tasks ───────────────────────────────────────────────────────────
+# times: list of (hour, minute) in local time
 
-def load_config(config_path: Path) -> dict:
-    """Load dispatcher configuration from JSON file."""
-    if not config_path.exists():
-        print(f"ERROR: Config file not found: {config_path}")
-        print(f"Copy dispatcher-config.example.json to dispatcher-config.json and edit it.")
-        sys.exit(1)
-    with open(config_path) as f:
-        return json.load(f)
+SCHEDULED_TASKS = [
+    {
+        "name": "morning-briefing",
+        "times": [(7, 0)],
+        "script": str(BASE_DIR / "Agents/Personal/morning-briefing.py"),
+        "args": [],
+        "python": VENV_PYTHON,
+        "log": str(BASE_DIR / "Agents/Personal/morning-briefing.log"),
+    },
+    {
+        "name": "hr-cv-check",
+        "times": [(0, 0), (12, 0)],
+        "script": str(BASE_DIR / "Agents/HR/egypt_cv_check_automation.py"),
+        "args": [],
+        "python": VENV_PYTHON,
+        "log": str(BASE_DIR / "Agents/HR/egypt_cv_check.log"),
+    },
+    {
+        "name": "kb-sales",
+        "times": [(2, 0)],
+        "script": str(BASE_DIR / "Claude Folder/convert_to_knowledge_base.py"),
+        "args": [],
+        "python": VENV_PYTHON,
+        "log": str(BASE_DIR / "Claude Folder/conversion-sales.log"),
+    },
+    {
+        "name": "kb-finance",
+        "times": [(2, 15)],
+        "script": str(BASE_DIR / "Claude Folder/convert_to_knowledge_base.py"),
+        "args": [
+            "--source",
+            "{{HOME}}/Library/CloudStorage/"
+            "OneDrive-TTCGlobal/Admin/Finance_Legal",
+            "--dest",
+            str(BASE_DIR / "Claude Folder/Knowledge Base/Finance"),
+        ],
+        "python": VENV_PYTHON,
+        "log": str(BASE_DIR / "Claude Folder/conversion-finance.log"),
+    },
+    {
+        "name": "sync-knowledge",
+        "times": [(23, 30)],
+        "script": str(BASE_DIR / "Agents/sync_personal_knowledge.py"),
+        "args": [],
+        "python": VENV_PYTHON,
+        "log": str(BASE_DIR / "Agents/sync_check.log"),
+    },
+    {
+        # Findability cross-index: aggregate every customer worklog.md (OneDrive
+        # Delivery + Sales) into the Personal worklog-index. Static .md write only —
+        # no kb_search/MCP impact. Semantic refresh (kb_vectorize --worklogs) stays
+        # manual to avoid invalidating a live kb_search handle mid-session.
+        "name": "worklog-index",
+        "times": [(23, 35)],
+        "script": str(BASE_DIR / "scripts/restructure/build_worklog_index.py"),
+        "args": [
+            "--roots",
+            "{{HOME}}/Library/CloudStorage/"
+            "OneDrive-TTCGlobal/Delivery",
+            "{{HOME}}/Library/CloudStorage/"
+            "OneDrive-TTCGlobal/Sales",
+            "--out",
+            str(BASE_DIR / "Agents/Personal/memory/worklog-index.md"),
+        ],
+        "python": VENV_PYTHON,
+        "log": str(BASE_DIR / "Agents/Personal/worklog-index.log"),
+    },
+]
 
+# ── File-watch tasks ──────────────────────────────────────────────────────────
 
-def resolve_path(p: str, base_dir: str) -> str:
-    """Resolve a path, expanding ~ and substituting {base_dir}."""
-    return os.path.expanduser(p.replace("{base_dir}", base_dir))
-
-
-def build_tasks(config: dict):
-    """Build SCHEDULED_TASKS and WATCH_TASKS from config."""
-    base_dir = os.path.expanduser(config.get("base_dir", "~/AI-Vault"))
-    default_python = resolve_path(config.get("default_python", "python3"), base_dir)
-    state_file = Path(resolve_path(config.get("state_file", "{base_dir}/.dispatcher-state.json"), base_dir))
-    lock_file = Path(resolve_path(config.get("lock_file", "~/.ttc-dispatcher.lock"), base_dir))
-
-    scheduled = []
-    for t in config.get("scheduled_tasks", []):
-        scheduled.append({
-            "name": t["name"],
-            "times": [tuple(pair) for pair in t["times"]],
-            "script": resolve_path(t["script"], base_dir),
-            "args": t.get("args", []),
-            "python": resolve_path(t.get("python", default_python), base_dir),
-            "log": resolve_path(t.get("log", f"{{base_dir}}/logs/{t['name']}.log"), base_dir),
-        })
-
-    watched = []
-    for t in config.get("watch_tasks", []):
-        watched.append({
-            "name": t["name"],
-            "watch": resolve_path(t["watch"], base_dir),
-            "script": resolve_path(t["script"], base_dir),
-            "args": t.get("args", []),
-            "python": resolve_path(t.get("python", default_python), base_dir),
-            "log": resolve_path(t.get("log", f"{{base_dir}}/logs/{t['name']}.log"), base_dir),
-        })
-
-    return scheduled, watched, state_file, lock_file
-
+WATCH_TASKS = [
+    {
+        "name": "fix-claude-permissions",
+        "watch": str(Path.home() / ".claude.json"),
+        "script": str(BASE_DIR / "fix-claude-permissions.py"),
+        "args": [],
+        "python": "/usr/bin/python3",
+        "log": str(BASE_DIR / "logs/fix-claude-permissions.log"),
+    },
+    {
+        "name": "fix-desktop-config",
+        "watch": str(
+            Path.home()
+            / "Library/Application Support/Claude/claude_desktop_config.json"
+        ),
+        "script": str(BASE_DIR / "fix-desktop-config.py"),
+        "args": [],
+        "python": VENV_PYTHON,
+        "log": str(BASE_DIR / "fix-desktop-config.log"),
+    },
+]
 
 # ── Helpers ────────────────────────────────────────────────────────────────────
 
@@ -84,26 +132,26 @@ def log(msg):
     print(f"[{ts}] {msg}", flush=True)
 
 
-def load_state(state_file):
-    if state_file.exists():
-        with open(state_file) as f:
+def load_state():
+    if STATE_FILE.exists():
+        with open(STATE_FILE) as f:
             return json.load(f)
     return None
 
 
-def save_state(state, state_file):
-    state_file.parent.mkdir(parents=True, exist_ok=True)
-    with open(state_file, "w") as f:
+def save_state(state):
+    STATE_FILE.parent.mkdir(parents=True, exist_ok=True)
+    with open(STATE_FILE, "w") as f:
         json.dump(state, f, indent=2)
 
 
-def init_state(now, scheduled_tasks, watch_tasks):
+def init_state(now):
     """First run: set last_run = now for all tasks so nothing catches up."""
     state = {
-        "scheduled": {t["name"]: now.isoformat() for t in scheduled_tasks},
+        "scheduled": {t["name"]: now.isoformat() for t in SCHEDULED_TASKS},
         "watched": {},
     }
-    for t in watch_tasks:
+    for t in WATCH_TASKS:
         try:
             state["watched"][t["name"]] = os.path.getmtime(t["watch"])
         except OSError:
@@ -169,20 +217,20 @@ def run_task(task):
 # ── Commands ───────────────────────────────────────────────────────────────────
 
 
-def cmd_status(scheduled_tasks, watch_tasks, state_file):
+def cmd_status():
     """Show current state and next fire times."""
-    state = load_state(state_file)
+    state = load_state()
     now = datetime.now()
     print(f"Current time: {now.strftime('%Y-%m-%d %H:%M:%S')}")
-    print(f"State file:   {state_file}")
+    print(f"State file:   {STATE_FILE}")
     print()
 
     if state is None:
-        print("No state file -- first run has not happened yet.")
+        print("No state file — first run has not happened yet.")
         return
 
     print("Scheduled tasks:")
-    for task in scheduled_tasks:
+    for task in SCHEDULED_TASKS:
         name = task["name"]
         last = state["scheduled"].get(name, "never")
         nxt = next_fire_time(task["times"], now)
@@ -192,7 +240,7 @@ def cmd_status(scheduled_tasks, watch_tasks, state_file):
         print(f"  {name:25s}  last={last[:16]:16s}  next={nxt_str}{flag}")
 
     print("\nWatch tasks:")
-    for task in watch_tasks:
+    for task in WATCH_TASKS:
         name = task["name"]
         stored = state["watched"].get(name, 0)
         try:
@@ -204,9 +252,9 @@ def cmd_status(scheduled_tasks, watch_tasks, state_file):
         print(f"  {name:25s}  watching={task['watch']}{flag}")
 
 
-def cmd_force(task_name, scheduled_tasks, watch_tasks, state_file):
+def cmd_force(task_name):
     """Force-run a specific task by name."""
-    all_tasks = scheduled_tasks + watch_tasks
+    all_tasks = SCHEDULED_TASKS + WATCH_TASKS
     task = next((t for t in all_tasks if t["name"] == task_name), None)
     if not task:
         print(f"Unknown task: {task_name}")
@@ -218,7 +266,7 @@ def cmd_force(task_name, scheduled_tasks, watch_tasks, state_file):
     log(f"  {task_name} exited with code {rc}")
 
     # Update state
-    state = load_state(state_file) or init_state(datetime.now(), scheduled_tasks, watch_tasks)
+    state = load_state() or init_state(datetime.now())
     now = datetime.now()
     if task_name in state["scheduled"]:
         state["scheduled"][task_name] = now.isoformat()
@@ -227,20 +275,20 @@ def cmd_force(task_name, scheduled_tasks, watch_tasks, state_file):
             state["watched"][task_name] = os.path.getmtime(task["watch"])
         except (OSError, KeyError):
             pass
-    save_state(state, state_file)
+    save_state(state)
 
 
-def cmd_dry_run(scheduled_tasks, watch_tasks, state_file):
+def cmd_dry_run():
     """Show what would run without executing."""
-    state = load_state(state_file)
+    state = load_state()
     now = datetime.now()
-    log("DRY RUN -- no tasks will be executed")
+    log("DRY RUN — no tasks will be executed")
 
     if state is None:
-        log("No state file -- first real run will initialize state.")
+        log("No state file — first real run will initialize state.")
         return
 
-    for task in scheduled_tasks:
+    for task in SCHEDULED_TASKS:
         name = task["name"]
         last = state["scheduled"].get(name)
         if last is None:
@@ -250,7 +298,7 @@ def cmd_dry_run(scheduled_tasks, watch_tasks, state_file):
         else:
             log(f"  {name}: not due")
 
-    for task in watch_tasks:
+    for task in WATCH_TASKS:
         name = task["name"]
         stored = state["watched"].get(name, 0)
         try:
@@ -263,22 +311,22 @@ def cmd_dry_run(scheduled_tasks, watch_tasks, state_file):
             log(f"  {name}: no change")
 
 
-def cmd_run(scheduled_tasks, watch_tasks, state_file):
+def cmd_run():
     """Normal dispatcher run."""
     now = datetime.now()
 
-    state = load_state(state_file)
+    state = load_state()
     if state is None:
-        log("First run -- initializing state (no catch-up)")
-        state = init_state(now, scheduled_tasks, watch_tasks)
-        save_state(state, state_file)
+        log("First run — initializing state (no catch-up)")
+        state = init_state(now)
+        save_state(state)
         return
 
     ran = []
     skipped = []
 
-    # -- Scheduled tasks
-    for task in scheduled_tasks:
+    # ── Scheduled tasks ───────────────────────────────────
+    for task in SCHEDULED_TASKS:
         name = task["name"]
         last_run = state["scheduled"].get(name)
 
@@ -291,13 +339,13 @@ def cmd_run(scheduled_tasks, watch_tasks, state_file):
             log(f"  Running {name}...")
             rc = run_task(task)
             state["scheduled"][name] = now.isoformat()
-            save_state(state, state_file)
+            save_state(state)
             ran.append(f"{name}(rc={rc})")
         else:
             skipped.append(name)
 
-    # -- File watches
-    for task in watch_tasks:
+    # ── File watches ──────────────────────────────────────
+    for task in WATCH_TASKS:
         name = task["name"]
         try:
             stored_mtime = state["watched"].get(name, 0)
@@ -310,19 +358,20 @@ def cmd_run(scheduled_tasks, watch_tasks, state_file):
             if current_mtime > stored_mtime:
                 log(f"  Running {name} (file changed)...")
                 rc = run_task(task)
+                # Re-read mtime after task ran (task may have modified the watched file)
                 try:
                     state["watched"][name] = os.path.getmtime(task["watch"])
                 except OSError:
                     state["watched"][name] = current_mtime
-                save_state(state, state_file)
+                save_state(state)
                 ran.append(f"{name}(rc={rc})")
             else:
                 skipped.append(name)
         except Exception as e:
             log(f"  ERROR processing watch task {name}: {e}")
 
-    # -- Final save and summarize
-    save_state(state, state_file)
+    # ── Final save (safety net) and summarize ─────────────
+    save_state(state)
 
     if ran:
         log(f"Ran: {', '.join(ran)} | Skipped: {len(skipped)}")
@@ -335,26 +384,12 @@ def cmd_run(scheduled_tasks, watch_tasks, state_file):
 if __name__ == "__main__":
     args = sys.argv[1:]
 
-    # Parse --config flag
-    config_path = DEFAULT_CONFIG
-    if "--config" in args:
-        idx = args.index("--config")
-        if idx + 1 < len(args):
-            config_path = Path(args[idx + 1])
-            args = args[:idx] + args[idx + 2:]
-        else:
-            print("Usage: --config /path/to/config.json")
-            sys.exit(1)
-
-    config = load_config(config_path)
-    scheduled_tasks, watch_tasks, state_file, lock_file = build_tasks(config)
-
     if "--status" in args:
-        cmd_status(scheduled_tasks, watch_tasks, state_file)
+        cmd_status()
         sys.exit(0)
 
     if "--dry-run" in args:
-        cmd_dry_run(scheduled_tasks, watch_tasks, state_file)
+        cmd_dry_run()
         sys.exit(0)
 
     if "--force" in args:
@@ -362,18 +397,18 @@ if __name__ == "__main__":
         if idx + 1 >= len(args):
             print("Usage: --force TASK_NAME")
             sys.exit(1)
-        cmd_force(args[idx + 1], scheduled_tasks, watch_tasks, state_file)
+        cmd_force(args[idx + 1])
         sys.exit(0)
 
-    # Normal run -- acquire exclusive lock
-    lock_fd = open(lock_file, "w")
+    # Normal run — acquire exclusive lock
+    lock_fd = open(LOCK_FILE, "w")
     try:
         fcntl.flock(lock_fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
     except OSError:
         sys.exit(0)  # another instance running
 
     try:
-        cmd_run(scheduled_tasks, watch_tasks, state_file)
+        cmd_run()
     finally:
         fcntl.flock(lock_fd, fcntl.LOCK_UN)
         lock_fd.close()

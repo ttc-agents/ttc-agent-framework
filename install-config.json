@@ -8,7 +8,13 @@
   "prerequisites": {
     "mac": {
       "package_manager": "brew",
-      "packages": ["git", "gh", "node", "python@3.12", "1password-cli"]
+      "packages": [
+        "git",
+        "gh",
+        "node",
+        "python@3.12",
+        "1password-cli"
+      ]
     },
     "windows": {
       "package_manager": "winget",
@@ -32,30 +38,180 @@
     "ttc-agent-oracle-staging"
   ],
   "shared_repos": [
-    { "repo": "ttc-agent-claude-config",   "path": "Claude-Config",     "auto_install": true,  "note": "User-level Claude config + slash commands. Symlinked from ~/CLAUDE.md and ~/.claude/commands/." },
-    { "repo": "ttc-brand-standards",       "path": "brand",             "auto_install": true,  "note": "TTC standards memos (Excel workbook standard, Claude Design brief spec). Logos/imagery NOT here — read from OneDrive via Agents/Docs/brand_paths.py." },
-    { "repo": "ttc-mcp-proton-server",     "path": "Tools/mcp-proton",  "auto_install": true,  "note": "MCP server for Proton Mail via local Proton Bridge. Requires 1Password item 'Proton Bridge PWD' in 'AI Vault'. Run npm install after clone." },
-    { "repo": "ttc-agent-oracle-staging",  "path": "Agents/Oracle",     "auto_install": false, "note": "Parked Oracle agent staging material (oracle-db-skills, apex-component-modifier, utPLSQL). Not used by any active agent." }
+    {
+      "repo": "ttc-agent-claude-config",
+      "path": "Claude-Config",
+      "auto_install": true,
+      "note": "User-level Claude config + slash commands. Symlinked from ~/CLAUDE.md and ~/.claude/commands/."
+    },
+    {
+      "repo": "ttc-brand-standards",
+      "path": "brand",
+      "auto_install": true,
+      "note": "TTC standards memos (Excel workbook standard, Claude Design brief spec). Logos/imagery NOT here \u2014 read from OneDrive via Agents/Docs/brand_paths.py."
+    },
+    {
+      "repo": "ttc-mcp-proton-server",
+      "path": "Tools/mcp-proton",
+      "auto_install": true,
+      "note": "MCP server for Proton Mail via local Proton Bridge. Requires 1Password item 'Proton Bridge PWD' in 'AI Vault'. Run npm install after clone."
+    },
+    {
+      "repo": "ttc-agent-oracle-staging",
+      "path": "Agents/Oracle",
+      "auto_install": false,
+      "note": "Parked Oracle agent staging material (oracle-db-skills, apex-component-modifier, utPLSQL). Not used by any active agent."
+    }
   ],
   "agents": [
-    { "repo": "ttc-agent-sap",               "dir": "SAP",               "apply": "sap",            "submodules": true,  "auto_install": true  },
-    { "repo": "ttc-agent-test",              "dir": "Test",              "apply": "test",           "submodules": false, "auto_install": true  },
-    { "repo": "ttc-agent-taf",               "dir": "TAF",               "apply": "taf",            "submodules": false, "auto_install": true  },
-    { "repo": "ttc-agent-tender",            "dir": "Tender",            "apply": "tender",         "submodules": false, "auto_install": true  },
-    { "repo": "ttc-agent-hr",                "dir": "HR",                "apply": "hr",             "submodules": false, "auto_install": true  },
-    { "repo": "ttc-agent-bwbm",              "dir": "BwBm",              "apply": "bwbm",           "submodules": false, "auto_install": true  },
-    { "repo": "ttc-agent-docs",              "dir": "Docs",              "apply": "docs",           "submodules": false, "auto_install": true  },
-    { "repo": "ttc-agent-odoo",              "dir": "Odoo",              "apply": "odoo",           "submodules": false, "auto_install": true  },
-    { "repo": "ttc-agent-contracts",         "dir": "Contracts",         "apply": "contracts",      "submodules": false, "auto_install": true  },
-    { "repo": "ttc-agent-finance",           "dir": "Finance",           "apply": "finance",        "submodules": false, "auto_install": true  },
-    { "repo": "ttc-agent-tom",               "dir": "QA_TOM_Generator",  "apply": "tom",            "submodules": false, "auto_install": true  },
-    { "repo": "ttc-agent-personal",          "dir": "Personal",          "apply": "personal",       "submodules": false, "auto_install": true,  "note": "Private: owner-only" },
-    { "repo": "ttc-agent-personal-template", "dir": "Personal",          "apply": "personal",       "submodules": false, "auto_install": false, "note": "Sanitized template. Conflicts with ttc-agent-personal. Install via: add-agent personal-template" },
-    { "repo": "ttc-agent-private",           "dir": "Private",           "apply": "private",        "submodules": false, "auto_install": true  },
-    { "repo": "ttc-agent-infra",             "dir": "Infrastructure",    "apply": "infra",          "submodules": false, "auto_install": true  },
-    { "repo": "ttc-agent-trading",           "dir": "Trading",           "apply": "trading",        "submodules": false, "auto_install": true  },
-    { "repo": "ttc-agent-trading-hf",        "dir": "Trading-HF",        "apply": "trading-hf",     "submodules": false, "auto_install": true  },
-    { "repo": "ttc-agent-trading-ibkr",      "dir": "Trading-IBKR",      "apply": "trading-ibkr",   "submodules": false, "auto_install": true  },
-    { "repo": "ttc-agent-control-review",    "dir": "Control-Review",    "apply": "control-review", "submodules": false, "auto_install": true  }
+    {
+      "repo": "ttc-agent-sap",
+      "dir": "SAP",
+      "apply": "sap",
+      "submodules": true,
+      "auto_install": true
+    },
+    {
+      "repo": "ttc-agent-test",
+      "dir": "Test",
+      "apply": "test",
+      "submodules": false,
+      "auto_install": true
+    },
+    {
+      "repo": "ttc-agent-taf",
+      "dir": "TAF",
+      "apply": "taf",
+      "submodules": false,
+      "auto_install": true
+    },
+    {
+      "repo": "ttc-agent-tender",
+      "dir": "Tender",
+      "apply": "tender",
+      "submodules": false,
+      "auto_install": true
+    },
+    {
+      "repo": "ttc-agent-hr",
+      "dir": "HR",
+      "apply": "hr",
+      "submodules": false,
+      "auto_install": true
+    },
+    {
+      "repo": "ttc-agent-bwbm",
+      "dir": "BwBm",
+      "apply": "bwbm",
+      "submodules": false,
+      "auto_install": true
+    },
+    {
+      "repo": "ttc-agent-docs",
+      "dir": "Docs",
+      "apply": "docs",
+      "submodules": false,
+      "auto_install": true
+    },
+    {
+      "repo": "ttc-agent-odoo",
+      "dir": "Odoo",
+      "apply": "odoo",
+      "submodules": false,
+      "auto_install": true
+    },
+    {
+      "repo": "ttc-agent-contracts",
+      "dir": "Contracts",
+      "apply": "contracts",
+      "submodules": false,
+      "auto_install": true
+    },
+    {
+      "repo": "ttc-agent-finance",
+      "dir": "Finance",
+      "apply": "finance",
+      "submodules": false,
+      "auto_install": true
+    },
+    {
+      "repo": "ttc-agent-tom",
+      "dir": "QA_TOM_Generator",
+      "apply": "tom",
+      "submodules": false,
+      "auto_install": true
+    },
+    {
+      "repo": "ttc-agent-personal",
+      "dir": "Personal",
+      "apply": "personal",
+      "submodules": false,
+      "auto_install": true,
+      "note": "Private: owner-only"
+    },
+    {
+      "repo": "ttc-agent-personal-template",
+      "dir": "Personal",
+      "apply": "personal",
+      "submodules": false,
+      "auto_install": false,
+      "note": "Sanitized template. Conflicts with ttc-agent-personal. Install via: add-agent personal-template"
+    },
+    {
+      "repo": "ttc-agent-private",
+      "dir": "Private",
+      "apply": "private",
+      "submodules": false,
+      "auto_install": true
+    },
+    {
+      "repo": "ttc-agent-infra",
+      "dir": "Infrastructure",
+      "apply": "infra",
+      "submodules": false,
+      "auto_install": true
+    },
+    {
+      "repo": "ttc-agent-trading",
+      "dir": "Trading",
+      "apply": "trading",
+      "submodules": false,
+      "auto_install": true
+    },
+    {
+      "repo": "ttc-agent-trading-hf",
+      "dir": "Trading-HF",
+      "apply": "trading-hf",
+      "submodules": false,
+      "auto_install": true
+    },
+    {
+      "repo": "ttc-agent-trading-ibkr",
+      "dir": "Trading-IBKR",
+      "apply": "trading-ibkr",
+      "submodules": false,
+      "auto_install": true
+    },
+    {
+      "repo": "ttc-agent-control-review",
+      "dir": "Control-Review",
+      "apply": "control-review",
+      "submodules": false,
+      "auto_install": true
+    },
+    {
+      "repo": "ttc-agent-leads",
+      "dir": "Leads",
+      "apply": "bwbm | vkb | dubai-holding | cbuae | qatar-energy | dib | customer <slug>",
+      "submodules": false,
+      "auto_install": true
+    },
+    {
+      "repo": "ttc-agent-curator",
+      "dir": "Curator",
+      "apply": "curator",
+      "submodules": false,
+      "auto_install": true
+    }
   ]
 }

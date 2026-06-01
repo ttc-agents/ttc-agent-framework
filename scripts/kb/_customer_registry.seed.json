@@ -1,0 +1,182 @@
+{
+  "schema_version": "1.0",
+  "last_updated": "2026-06-01",
+  "description": "Maps customers to their primary OneDrive folder and AI-INFO KB location. Edited by kb_bootstrap_customer.sh — do not edit by hand unless you know what you're doing.",
+  "customers": {
+    "adnoc": {
+      "display_name": "ADNOC",
+      "region": "Middle East",
+      "primary_folder": "{{HOME}}/Library/CloudStorage/OneDrive-TTCGlobal/Sales/Customer/Middle East/ADNOC",
+      "ai_info_folder": "{{HOME}}/Library/CloudStorage/OneDrive-TTCGlobal/Sales/Customer/Middle East/ADNOC/AI-INFO - DO NOT DELETE",
+      "created": "2026-04-20",
+      "active_agents": [],
+      "status": "lost",
+      "lead": "generic",
+      "notes": "DEAD LEAD (Joerg 2026-06-01): RFT 6000139001 pursuit closed/lost; not promoted. Artefacts left in Agents/Tender (working/adnoc-rfq-2026 + memory/adnoc-rft-6000139001.md)."
+    },
+    "central-bank-uae": {
+      "display_name": "Central Bank UAE",
+      "region": "Middle East",
+      "primary_folder": "{{HOME}}/Library/CloudStorage/OneDrive-TTCGlobal/Sales/Customer/Middle East/Central Bank UAE",
+      "ai_info_folder": "{{HOME}}/Library/CloudStorage/OneDrive-TTCGlobal/Sales/Customer/Middle East/Central Bank UAE/AI-INFO - DO NOT DELETE",
+      "lead": "dedicated",
+      "lead_path": "Agents/Leads/cbuae/",
+      "restricted_ai_info": "",
+      "worklog": "{{HOME}}/Library/CloudStorage/OneDrive-TTCGlobal/Sales/Customer/Middle East/Central Bank UAE/AI-INFO - DO NOT DELETE/worklog.md",
+      "created": "2026-04-20",
+      "active_agents": [
+        "contracts",
+        "tender",
+        "test"
+      ],
+      "status": "active",
+      "notes": "Won tender — active contract (Performance & Regression Testing Automation Platform). Dedicated Lead (apply cbuae) since 2026-05-31; 0 file moves (engagement already clean — knowledge in Team-tier + Finance). Commercial in Finance/Contracts (Finance/Legal circle), no Restricted vault.",
+      "aliases": [
+        "CBUAE"
+      ]
+    },
+    "dubai-holdings-leapwork": {
+      "display_name": "Dubai Holdings Leapwork",
+      "region": "Middle East",
+      "primary_folder": "{{HOME}}/Library/CloudStorage/OneDrive-TTCGlobal/Sales/Customer/Middle East/Dubai Holdings Leapwork",
+      "ai_info_folder": "{{HOME}}/Library/CloudStorage/OneDrive-TTCGlobal/Sales/Customer/Middle East/Dubai Holdings Leapwork/AI-INFO - DO NOT DELETE",
+      "lead": "dedicated",
+      "lead_path": "Agents/Leads/dubai-holding/",
+      "restricted_ai_info": "",
+      "worklog": "{{HOME}}/Library/CloudStorage/OneDrive-TTCGlobal/Sales/Customer/Middle East/Dubai Holdings Leapwork/AI-INFO - DO NOT DELETE/worklog.md",
+      "created": "2026-04-20",
+      "active_agents": [
+        "contracts",
+        "taf",
+        "tender",
+        "test"
+      ],
+      "status": "active",
+      "notes": "Dedicated Lead (apply dubai-holding) since 2026-05-31. DH program extracted from the tom capability into the Lead; QA-TOM/Phase-Zero engagement. Commercial in Finance/Contracts (Finance/Legal circle). No Restricted vault (like VKB).",
+      "aliases": [
+        "DH"
+      ],
+      "match_keys": [
+        "dubai-holding"
+      ]
+    },
+    "dubai-islamic-bank-oracle": {
+      "display_name": "Dubai Islamic Bank (Oracle)",
+      "region": "Middle East",
+      "primary_folder": "{{HOME}}/Library/CloudStorage/OneDrive-TTCGlobal/Sales/Customer/Middle East/Dubai Islamic Bank (Oracle)",
+      "ai_info_folder": "{{HOME}}/Library/CloudStorage/OneDrive-TTCGlobal/Sales/Customer/Middle East/Dubai Islamic Bank (Oracle)/AI-INFO - DO NOT DELETE",
+      "created": "2026-04-20",
+      "active_agents": [
+        "contracts",
+        "tender"
+      ],
+      "status": "active",
+      "aliases": [
+        "DIB"
+      ],
+      "lead": "dedicated",
+      "lead_path": "Agents/Leads/dib/",
+      "restricted_ai_info": "",
+      "worklog": "{{HOME}}/Library/CloudStorage/OneDrive-TTCGlobal/Sales/Customer/Middle East/Dubai Islamic Bank (Oracle)/AI-INFO - DO NOT DELETE/worklog.md",
+      "notes": "Dedicated Lead (apply dib) since 2026-06-01. Promoted from generic long-tail in the architecture-restructure sweep. DIB Oracle SOA OPCC->OC3 performance testing (RFQ 2026/0027). Commercial (Performetriks subcontract, T&C) stays in Agents/Contracts + KB Finance (Finance/Legal circle); pointer in worklog. No Restricted vault."
+    },
+    "enoc": {
+      "display_name": "ENOC",
+      "region": "Middle East",
+      "primary_folder": "{{HOME}}/Library/CloudStorage/OneDrive-TTCGlobal/Sales/Customer/Middle East/ENOC",
+      "ai_info_folder": "{{HOME}}/Library/CloudStorage/OneDrive-TTCGlobal/Sales/Customer/Middle East/ENOC/AI-INFO - DO NOT DELETE",
+      "created": "2026-04-20",
+      "active_agents": [],
+      "status": "active",
+      "lead": "generic"
+    },
+    "menabev": {
+      "display_name": "MenaBev",
+      "region": "Middle East",
+      "primary_folder": "{{HOME}}/Library/CloudStorage/OneDrive-TTCGlobal/Sales/Customer/Middle East/MenaBev",
+      "ai_info_folder": "{{HOME}}/Library/CloudStorage/OneDrive-TTCGlobal/Sales/Customer/Middle East/MenaBev/AI-INFO - DO NOT DELETE",
+      "created": "2026-04-20",
+      "active_agents": [],
+      "status": "active",
+      "lead": "generic"
+    },
+    "vkb": {
+      "display_name": "VKB",
+      "region": "South Africa",
+      "primary_folder": "{{HOME}}/Library/CloudStorage/OneDrive-TTCGlobal/Delivery/Leapwork/VKB",
+      "ai_info_folder": "{{HOME}}/Library/CloudStorage/OneDrive-TTCGlobal/Delivery/Leapwork/VKB/AI-INFO - DO NOT DELETE",
+      "lead": "dedicated",
+      "lead_path": "Agents/Leads/vkb/",
+      "restricted_ai_info": "",
+      "worklog": "{{HOME}}/Library/CloudStorage/OneDrive-TTCGlobal/Delivery/Leapwork/VKB/AI-INFO - DO NOT DELETE/worklog.md",
+      "created": "2026-04-20",
+      "active_agents": [
+        "taf",
+        "tender",
+        "test"
+      ],
+      "status": "active",
+      "notes": "Leapwork delivery assurance engagement. Primary folder is Delivery because VKB has no Sales/Customer presence (delivery-only)."
+    },
+    "dda": {
+      "display_name": "DDA",
+      "region": "Middle East",
+      "primary_folder": "{{HOME}}/Library/CloudStorage/OneDrive-TTCGlobal/Sales/Customer/Middle East/DDA",
+      "ai_info_folder": "{{HOME}}/Library/CloudStorage/OneDrive-TTCGlobal/Sales/Customer/Middle East/DDA/AI-INFO - DO NOT DELETE",
+      "created": "2026-04-22",
+      "active_agents": [
+        "tender"
+      ],
+      "status": "active",
+      "lead": "generic"
+    },
+    "qatar-energy": {
+      "display_name": "Qatar Energy",
+      "region": "Middle East",
+      "primary_folder": "{{HOME}}/Library/CloudStorage/OneDrive-TTCGlobal/Sales/Customer/Middle East/Qatar Energy",
+      "ai_info_folder": "{{HOME}}/Library/CloudStorage/OneDrive-TTCGlobal/Sales/Customer/Middle East/Qatar Energy/AI-INFO - DO NOT DELETE",
+      "lead": "dedicated",
+      "lead_path": "Agents/Leads/qatar-energy/",
+      "restricted_ai_info": "",
+      "worklog": "{{HOME}}/Library/CloudStorage/OneDrive-TTCGlobal/Sales/Customer/Middle East/Qatar Energy/AI-INFO - DO NOT DELETE/worklog.md",
+      "created": "2026-04-22",
+      "active_agents": [
+        "tender"
+      ],
+      "status": "active",
+      "notes": "Active pre-sales pursuit (SAP S/4HANA perf & regression testing via Tricentis; licence $1.255M/yr). Dedicated Lead (apply qatar-energy) since 2026-05-31; engagement brain + qe_analysis build pipeline extracted from SAP capability (21 files). Commercial state local in Lead memory; no Restricted vault."
+    },
+    "naivas": {
+      "display_name": "Naivas",
+      "region": "South Africa",
+      "primary_folder": "{{HOME}}/Library/CloudStorage/OneDrive-TTCGlobal/Delivery/Leapwork/Naivas",
+      "ai_info_folder": "{{HOME}}/Library/CloudStorage/OneDrive-TTCGlobal/Delivery/Leapwork/Naivas/AI-INFO - DO NOT DELETE",
+      "created": "2026-05-09",
+      "active_agents": [
+        "tender"
+      ],
+      "status": "active",
+      "lead": "generic"
+    },
+    "bwbm": {
+      "display_name": "BwBm (Bundeswehr Bekleidungsmanagement)",
+      "region": "DACH Region",
+      "primary_folder": "{{HOME}}/Library/CloudStorage/OneDrive-TTCGlobal/Delivery/2 DACH Region/BwBm",
+      "ai_info_folder": "{{HOME}}/Library/CloudStorage/OneDrive-TTCGlobal/Delivery/2 DACH Region/BwBm/AI-INFO - DO NOT DELETE",
+      "lead": "dedicated",
+      "lead_path": "Agents/Leads/bwbm/",
+      "restricted_ai_info": "{{HOME}}/Library/CloudStorage/OneDrive-TTCGlobal/Admin/Finance_Legal/BwBm/AI-INFO-RESTRICTED",
+      "worklog": "{{HOME}}/Library/CloudStorage/OneDrive-TTCGlobal/Delivery/2 DACH Region/BwBm/AI-INFO - DO NOT DELETE/worklog.md",
+      "created": "2026-05-31",
+      "active_agents": [
+        "sap",
+        "test",
+        "taf",
+        "autolead",
+        "opendesk"
+      ],
+      "status": "active",
+      "notes": "Dedicated Lead pilot (architecture restructure). Team-tier in personal OneDrive Delivery (SharePoint library deferred to follow-on). Restricted vault per-folder shared with circle. Was previously internal domain-KB (Claude Folder/Knowledge Base/BwBm), not in registry."
+    }
+  }
+}
