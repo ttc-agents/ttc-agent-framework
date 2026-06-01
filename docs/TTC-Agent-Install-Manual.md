@@ -6,7 +6,7 @@
 
 If you get stuck at any step, send a screenshot to Joerg and we will get you unblocked.
 
-> **Already installed?** Skip to [Updating to the latest version](#updating-to-the-latest-version) — one command and you're current. The [Knowledge Base section](#knowledge-base--how-its-organised) covers the new two-tier (general + shared customer) model.
+> **Already installed an earlier version?** Go to [Group 2 — Existing user upgrading to the new architecture](#group-2--existing-user-upgrading-to-the-new-architecture) for the one-time upgrade to the Customer-Lead + Curator model. For routine updates after that, see [Updating to the latest version](#updating-to-the-latest-version).
 
 ---
 
@@ -17,6 +17,49 @@ If you get stuck at any step, send a screenshot to Joerg and we will get you unb
 - **The TTC agents themselves** — each one has its own knowledge and instructions. You only see the agents you have been given access to.
 
 Most TTC colleagues end up using both apps side by side: Claude Desktop for quick chats and tool control, Claude Code when they need a specific agent persona.
+
+**The Customer-Lead architecture (2026-06).** Customer work runs through a **Customer Lead** — type `apply bwbm`, `apply vkb`, `apply dubai-holding`, `apply cbuae`, `apply qatar-energy`, `apply dib`, or `apply customer <name>` for any other customer. The Lead owns that engagement's context and worklog and pulls in the reusable **capabilities** as needed (`apply sap`, `apply test`, `apply taf`, `apply tender`, `apply contracts`, `apply docs`, `apply tom`). A **Curator** governance agent (`apply curator`) keeps everything tidy. You don't have to memorise this — just start from the customer (a Lead) or, for general technical work, from a capability.
+
+---
+
+## Which path are you on?
+
+There are two ways to arrive here — find yourself below, then follow that path.
+
+### 🟢 Group 1 — First-time install (new to the TTC agents)
+
+You have never installed the agents on this machine. **Follow the 7 steps below, in order** — they take you from a fresh laptop to a working setup in about 20 minutes. Begin at *Step 1 — Activate your Claude account*.
+
+When you finish you will have the full Customer-Lead architecture described above: the Customer Leads, the capabilities, and the Curator.
+
+### 🟡 Group 2 — Existing user upgrading to the new architecture
+
+You installed the agents earlier (the older "flat" set — `apply tender`, `apply sap`, and so on) and want the new **Customer-Lead + Curator** model. This is a quick, one-time upgrade:
+
+1. **Ask Joerg for access to the two new repositories** if you don't already have it: **`ttc-agent-leads`** and **`ttc-agent-curator`**. He adds your GitHub account to the team; accept the GitHub invitation email (same as for any agent).
+
+2. **Re-run the one-line installer.** ⚠️ Do *not* rely on `update-all` for this step — `update-all` only pulls repos you already have and will **not** clone the two new ones. The installer is idempotent and is the correct upgrade path:
+
+    **Mac** — open Terminal and run:
+    ```bash
+    curl -fsSL https://raw.githubusercontent.com/ttc-agents/ttc-agent-framework/main/install.sh | bash
+    ```
+    **Windows** — open PowerShell *as administrator* and run:
+    ```powershell
+    iwr https://raw.githubusercontent.com/ttc-agents/ttc-agent-framework/main/install.ps1 | iex
+    ```
+
+    It updates the framework, **clones the new Leads and Curator agents**, deploys the restructure/governance tools, and generates the capability dispatch sub-agents (`cap-*`). Everything you already had is left untouched, and your existing customer registry is preserved (not overwritten).
+
+3. **Verify.** Open a *new* terminal, type `claude`, then try:
+    ```
+    apply curator      → loads the Curator governance agent
+    apply bwbm         → (or any customer you work on) loads that Customer Lead
+    ```
+
+4. **From now on**, the weekly `update-all` (see *Updating to the latest version*) keeps you current. You only need the full installer again when brand-new repositories are added (Joerg will say so).
+
+> **What actually changed?** Customer knowledge used to be scattered across many agents. It now lives with a **Customer Lead** per engagement (context + worklog), while your capability agents (`tender`, `sap`, `test`, …) are unchanged — they're now the reusable "how" the Leads draw on. Nothing you saved is lost.
 
 ---
 
@@ -472,6 +515,7 @@ When to run it:
 When **not** to run it (use the one-line installer from Step 5 instead):
 - First install on a new machine
 - When a new tool or Python dependency has been added (rare — usually mentioned in release notes)
+- **When brand-new repositories or a new architecture have been added** (e.g. the Customer-Lead + Curator model). `update-all` only pulls repos you already have — it cannot clone new ones. Re-run the one-line installer once (see [Group 2](#group-2--existing-user-upgrading-to-the-new-architecture)), then resume using `update-all`.
 
 ---
 
