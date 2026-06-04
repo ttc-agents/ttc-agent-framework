@@ -88,7 +88,11 @@ fi
 # Verify SSH to GitHub actually works. If gh auth login uploaded a new key
 # it should — but we double-check because cron jobs and SSH-spawned shells
 # silently fail if SSH auth is broken.
-if ssh -T -o BatchMode=yes -o StrictHostKeyChecking=accept-new git@github.com 2>&1 | grep -q "successfully authenticated"; then
+# Note: `ssh -T git@github.com` always exits 1 by design (GitHub closes the
+# connection — "does not provide shell access"). With `set -o pipefail` that
+# poisons the whole pipe, so capture output first and grep separately.
+SSH_PROBE_OUTPUT=$(ssh -T -o BatchMode=yes -o StrictHostKeyChecking=accept-new git@github.com 2>&1 || true)
+if echo "$SSH_PROBE_OUTPUT" | grep -q "successfully authenticated"; then
     ok "GitHub ready (SSH)"
 else
     warn "SSH to git@github.com is NOT working yet."
