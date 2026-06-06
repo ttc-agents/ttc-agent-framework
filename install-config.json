@@ -207,6 +207,22 @@
       "auto_install": true
     },
     {
+      "repo": "ttc-agent-sales-admin",
+      "dir": "Sales-Admin",
+      "apply": "sales-admin",
+      "submodules": false,
+      "auto_install": false,
+      "note": "Joerg's master Sales agent. Contains live customer-identifier watchlist + send-mail gate. Not auto-installed on team machines; clone manually on Joerg's machines only."
+    },
+    {
+      "repo": "ttc-agent-sales",
+      "dir": "Sales",
+      "apply": "sales",
+      "submodules": false,
+      "auto_install": true,
+      "note": "TTC team read-only Sales agent. Queries OneDrive Network KB snapshot. Safe to install on any team member's machine."
+    },
+    {
       "repo": "ttc-agent-lead-bwbm",
       "dir": "Leads/bwbm",
       "apply": "bwbm",
