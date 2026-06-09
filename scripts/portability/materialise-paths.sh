@@ -76,6 +76,14 @@ materialise_file() {
         return 0
     fi
 
+    # Honour the SANITISE-SKIP opt-out (symmetric with sanitise-paths.sh): files
+    # that document or implement the placeholder substitution keep their literal
+    # {{PLACEHOLDER}} text and must NOT be materialised. Closes path-portability
+    # lesson #4 (docs explaining the patterns got their examples rewritten).
+    if head -50 "$f" 2>/dev/null | grep -qE '#[[:space:]]*SANITISE-SKIP'; then
+        return 0
+    fi
+
     local tmp
     tmp=$(mktemp "${f}.materialise.XXXXXX")
     sed -E "$_MATERIALISE_SED_SCRIPT" "$f" > "$tmp"
