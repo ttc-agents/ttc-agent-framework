@@ -31,8 +31,10 @@
 #   2. Authored working-tree edits → detected NON-MUTATINGLY: temp copies of
 #      the changed tracked files are sanitised and diffed against HEAD (the live
 #      tree is never touched). If anything beyond reproducible materialisation
-#      remains, reset is skipped and the edits are left for auto-commit. The
-#      sanitiser ships with the framework, so this runs on macOS and Windows.
+#      remains, reset is skipped and the edits are left for auto-commit. Needs a
+#      sanitiser: the PS one ships with the framework (Windows); the bash one
+#      lives in AI-Vault/scripts on the authoring Macs. Machines without it
+#      (consumer installs) fall back to Guard 1 alone — fine, they don't author.
 #
 # A per-repo mkdir lock (.git/ttc-sync.lock) mutually excludes a manual run from
 # the hourly auto-commit-agents.sh so reset --hard can't fire mid-rebase.
