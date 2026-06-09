@@ -61,8 +61,8 @@ echo "Slug         : $SLUG"
 
 # ── infer primary folder if not given ────────────────────────────────────────
 if [[ -z "$PRIMARY" ]]; then
-  SALES_ROOT="{{HOME}}/Library/CloudStorage/OneDrive-TTCGlobal/Sales/Customer"
-  DELIVERY_ROOT="{{HOME}}/Library/CloudStorage/OneDrive-TTCGlobal/Delivery"
+  SALES_ROOT="{{ONEDRIVE_SHARED}}/Sales/Customer"
+  DELIVERY_ROOT="{{ONEDRIVE_SHARED}}/Delivery"
 
   # Try exact match under Sales/Customer/<Region>/
   CANDIDATES=$(find "$SALES_ROOT" -maxdepth 2 -type d -iname "$DISPLAY_NAME" 2>/dev/null | head -5)

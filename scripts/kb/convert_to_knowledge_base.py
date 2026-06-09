@@ -23,7 +23,7 @@ from datetime import datetime
 
 # ── Configuration ─────────────────────────────────────────────────────────────
 
-SOURCE_ROOT = Path("{{HOME}}/Library/CloudStorage/OneDrive-TTCGlobal/Sales/Customer")
+SOURCE_ROOT = Path("{{ONEDRIVE_SHARED}}/Sales/Customer")
 KB_ROOT     = Path("{{AI_VAULT}}/Claude Folder/Knowledge Base")
 INDEX_FILE  = KB_ROOT / "_index.json"
 REGISTRY_FILE = KB_ROOT / "_customer_registry.json"

@@ -9,7 +9,11 @@
 #   {{ONEDRIVE_SHARED}} -> probed per host: either
 #                            $HOME/Library/CloudStorage/OneDrive-TTCGlobal              (Joerg, owner)
 #                          OR
+<<<<<<< Updated upstream
 #                            $HOME/Library/CloudStorage/OneDrive-SharedLibraries-TTCGlobal/Joerg Pietzsch -  (team member)
+=======
+#                            {{ONEDRIVE_SHARED}}/ (team member)
+>>>>>>> Stashed changes
 #                          The placeholder is always written followed by /<FolderName>/...
 #                          so the substitution joins cleanly with either form.
 #
