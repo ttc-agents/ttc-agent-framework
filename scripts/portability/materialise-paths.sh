@@ -10,7 +10,7 @@
 #                            $HOME/Library/CloudStorage/OneDrive-TTCGlobal              (Joerg, owner)
 #                          OR
 <<<<<<< Updated upstream
-#                            $HOME/Library/CloudStorage/OneDrive-SharedLibraries-TTCGlobal/Joerg Pietzsch -  (team member)
+#                            {{ONEDRIVE_SHARED}}/ (team member)
 =======
 #                            {{ONEDRIVE_SHARED}}/ (team member)
 >>>>>>> Stashed changes
