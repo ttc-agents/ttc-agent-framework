@@ -115,9 +115,10 @@ function Invoke-MaterialiseFile {
 
     # Order: {{ONEDRIVE_SHARED}}/ FIRST (its substitution already contains a fully-
     # resolved $HOME, so no inner placeholder to re-expand).
-    $newContent = $content.Replace('{{ONEDRIVE_SHARED}}/', $OnedriveSharedFwd) `
-                          .Replace('{{AI_VAULT}}', $AiVaultFwd) `
-                          .Replace('{{HOME}}', $HomeRootFwd)
+    # Single line, no backtick continuation: a backtick followed by CRLF (git
+    # autocrlf checkout on Windows inserts CR after the backtick) breaks the
+    # line-continuation in PowerShell 5.1. Keep the chain on one line.
+    $newContent = $content.Replace('{{ONEDRIVE_SHARED}}/', $OnedriveSharedFwd).Replace('{{AI_VAULT}}', $AiVaultFwd).Replace('{{HOME}}', $HomeRootFwd)
 
     if ($newContent -eq $content) { return }
 
