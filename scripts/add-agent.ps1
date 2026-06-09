@@ -52,13 +52,16 @@ $GitHubOrg = $cfg.github_org
 
 if (-not (Test-Path $AgentsDir)) { New-Item -ItemType Directory -Path $AgentsDir -Force | Out-Null }
 
-if (Test-Path (Join-Path $Target ".git")) {
-    Write-Host "[skip] $($agent.repo) already cloned - pulling latest"
-    git -C $Target pull --ff-only 2>&1 | Out-Null
-    if ($agent.submodules) {
-        git -C $Target submodule update --init --recursive 2>&1 | Out-Null
-    }
-} else {
+# Source the shared sync helper so the update goes through the guarded
+# fetch -> reset --hard -> re-materialise path (and so this agent gets
+# materialised at all — add-agent.ps1 previously skipped materialisation).
+$env:TTC_AI_VAULT      = $InstallRoot
+$env:TTC_FRAMEWORK_DIR = $FrameworkDir
+$env:TTC_HOME          = $env:USERPROFILE
+$SyncHelper = Join-Path $FrameworkDir "scripts\portability\sync-repo.ps1"
+if (Test-Path $SyncHelper) { . $SyncHelper }
+
+if (-not (Test-Path (Join-Path $Target ".git"))) {
     Write-Host "[clone] $GitHubOrg/$($agent.repo) -> $Target (SSH)"
     $sshUrl = "git@github.com:$GitHubOrg/$($agent.repo).git"
     if ($agent.submodules) {
@@ -66,6 +69,18 @@ if (Test-Path (Join-Path $Target ".git")) {
     } else {
         git clone $sshUrl $Target
     }
+} else {
+    Write-Host "[skip] $($agent.repo) already cloned - syncing to origin"
+}
+# Sync to origin + materialise (replaces the silent-failing pull --ff-only).
+if (Get-Command Sync-RepoToOrigin -ErrorAction SilentlyContinue) {
+    Sync-RepoToOrigin -Target $Target
+} else {
+    $materialiser = Join-Path $FrameworkDir "scripts\portability\materialise-paths.ps1"
+    if (Test-Path $materialiser) { try { & $materialiser -Path $Target | Out-Null } catch {} }
+}
+if ($agent.submodules) {
+    git -C $Target submodule update --init --recursive 2>&1 | Out-Null
 }
 
 $installPs1 = Join-Path $Target "install.ps1"

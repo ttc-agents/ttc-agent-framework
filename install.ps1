@@ -111,12 +111,28 @@ if ($sshTest -match "successfully authenticated") {
 Log "Step 4/6: Cloning framework"
 if (-not (Test-Path $InstallRoot)) { New-Item -ItemType Directory -Path $InstallRoot -Force | Out-Null }
 if (Test-Path (Join-Path $FrameworkDir ".git")) {
-    Write-Host "  [skip] framework already cloned - pulling latest"
-    git -C $FrameworkDir pull --ff-only 2>&1 | Out-Null
+    Write-Host "  [skip] framework already cloned - syncing to origin"
 } else {
     git clone "git@github.com:$GitHubOrg/$FrameworkRepo.git" $FrameworkDir
 }
 Ok "Framework at $FrameworkDir"
+
+# Source the shared sync helper (inside the framework we just ensured). All repo
+# updates go through Sync-RepoToOrigin: fetch -> guarded reset --hard origin
+# -> re-materialise. Replaces `git pull --ff-only 2>&1 | Out-Null`, which
+# silently failed on the always-dirty (materialised) tree and never pulled new
+# files (e.g. KB docs). PowerShell loads scripts fully before running, so
+# updating the framework mid-run is safe (no re-exec needed).
+$env:TTC_AI_VAULT      = $InstallRoot
+$env:TTC_FRAMEWORK_DIR = $FrameworkDir
+$env:TTC_HOME          = $env:USERPROFILE
+$SyncHelper = Join-Path $FrameworkDir "scripts\portability\sync-repo.ps1"
+if (Test-Path $SyncHelper) {
+    . $SyncHelper
+    if (Test-Path (Join-Path $FrameworkDir ".git")) { Sync-RepoToOrigin -Target $FrameworkDir }
+} else {
+    Warn "sync helper not found at $SyncHelper - repo updates may be incomplete"
+}
 
 # --- 5. Discover + install every accessible agent ---------------------------
 Log "Step 5/6: Discovering agents you have access to"
@@ -162,31 +178,31 @@ foreach ($agent in $toInstall) {
     Write-Host ""
     Log "  Agent: $($agent.apply) ($($agent.repo))"
 
-    if (Test-Path (Join-Path $target ".git")) {
-        Write-Host "    [skip] already cloned - pulling latest"
-        git -C $target pull --ff-only 2>&1 | Out-Null
-        if ($agent.submodules) {
-            git -C $target submodule update --init --recursive 2>&1 | Out-Null
-        }
-    } else {
+    if (-not (Test-Path (Join-Path $target ".git"))) {
         $sshUrl = "git@github.com:$GitHubOrg/$($agent.repo).git"
         if ($agent.submodules) {
             git clone --recurse-submodules $sshUrl $target
         } else {
             git clone $sshUrl $target
         }
+    } else {
+        Write-Host "    [skip] already cloned - syncing to origin"
     }
 
-    # Materialise {{AI_VAULT}} / {{HOME}} placeholders for this machine.
-    $materialiser = Join-Path $FrameworkDir "scripts\portability\materialise-paths.ps1"
-    if (Test-Path $materialiser) {
-        $env:TTC_AI_VAULT = $InstallRoot
-        $env:TTC_HOME     = $env:USERPROFILE
-        try {
-            & $materialiser -Path $target | Out-Null
-        } catch {
-            Warn "    materialise-paths failed for $($agent.apply): $_"
+    # Sync to origin + re-materialise (handles both the fresh clone and updates;
+    # replaces the silent-failing `pull --ff-only` + separate materialise).
+    if (Get-Command Sync-RepoToOrigin -ErrorAction SilentlyContinue) {
+        Sync-RepoToOrigin -Target $target
+    } else {
+        $materialiser = Join-Path $FrameworkDir "scripts\portability\materialise-paths.ps1"
+        if (Test-Path $materialiser) {
+            $env:TTC_AI_VAULT = $InstallRoot
+            $env:TTC_HOME     = $env:USERPROFILE
+            try { & $materialiser -Path $target | Out-Null } catch { Warn "    materialise-paths failed for $($agent.apply): $_" }
         }
+    }
+    if ($agent.submodules) {
+        git -C $target submodule update --init --recursive 2>&1 | Out-Null
     }
 
     $installPs1 = Join-Path $target "install.ps1"

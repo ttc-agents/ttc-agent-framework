@@ -107,12 +107,27 @@ fi
 log "Step 4/7: Cloning framework"
 mkdir -p "$INSTALL_ROOT"
 if [[ -d "$FRAMEWORK_DIR/.git" ]]; then
-    echo "  [skip] framework already cloned — pulling latest"
-    git -C "$FRAMEWORK_DIR" pull --ff-only || warn "pull failed, continuing"
+    echo "  [skip] framework already cloned — syncing to origin"
 else
     git clone "git@github.com:$GITHUB_ORG/$FRAMEWORK_REPO.git" "$FRAMEWORK_DIR"
 fi
 ok "Framework at $FRAMEWORK_DIR"
+
+# Source the shared sync helper (lives inside the framework we just ensured).
+# All subsequent repo updates go through sync_repo_to_origin: fetch → guarded
+# reset --hard origin/<branch> → re-materialise. This replaces the old
+# `git pull --ff-only` calls that silently failed on the always-dirty
+# (materialised) working tree and never pulled new files (e.g. KB docs).
+export TTC_AI_VAULT="$INSTALL_ROOT" TTC_FRAMEWORK_DIR="$FRAMEWORK_DIR" TTC_HOME="$HOME"
+SYNC_HELPER="$FRAMEWORK_DIR/scripts/portability/sync-repo.sh"
+if [[ -f "$SYNC_HELPER" ]]; then
+    source "$SYNC_HELPER"
+    # Bring the framework itself current; if it advanced, re-exec this installer
+    # with the new code (self-update is handled safely by the helper).
+    sync_framework_and_reexec "$FRAMEWORK_DIR" "$FRAMEWORK_DIR/install.sh" ${@+"$@"}
+else
+    warn "sync helper not found at $SYNC_HELPER — repo updates may be incomplete"
+fi
 
 # --- 5. Discover + install every accessible agent ----------------------------
 log "Step 5/7: Discovering agents you have access to"
@@ -164,24 +179,26 @@ while IFS=$'\t' read -r REPO DIR APPLY FLAGS; do
     TARGET="$AGENTS_DIR/$DIR"
     echo ""
     log "  Agent: $APPLY ($REPO)"
-    if [[ -d "$TARGET/.git" ]]; then
-        echo "    [skip] already cloned - pulling latest"
-        git -C "$TARGET" pull --ff-only 2>/dev/null || warn "    pull failed"
-        if [[ "$FLAGS" == "true" ]]; then
-            git -C "$TARGET" submodule update --init --recursive 2>/dev/null || warn "    submodule update failed"
-        fi
-    else
+    if [[ ! -d "$TARGET/.git" ]]; then
         if [[ "$FLAGS" == "true" ]]; then
             git clone --recurse-submodules "git@github.com:$GITHUB_ORG/$REPO.git" "$TARGET"
         else
             git clone "git@github.com:$GITHUB_ORG/$REPO.git" "$TARGET"
         fi
+    else
+        echo "    [skip] already cloned - syncing to origin"
     fi
-    # Materialise {{AI_VAULT}} / {{HOME}} placeholders to this machine's paths.
-    if [[ -x "$FRAMEWORK_DIR/scripts/portability/materialise-paths.sh" ]]; then
+    # Sync to origin + re-materialise (handles both the fresh clone and updates;
+    # replaces the silent-failing `pull --ff-only` + separate materialise).
+    if command -v sync_repo_to_origin >/dev/null 2>&1; then
+        sync_repo_to_origin "$TARGET"
+    else
         TTC_AI_VAULT="$INSTALL_ROOT" TTC_HOME="$HOME" \
-            "$FRAMEWORK_DIR/scripts/portability/materialise-paths.sh" "$TARGET" >/dev/null \
+            "$FRAMEWORK_DIR/scripts/portability/materialise-paths.sh" "$TARGET" >/dev/null 2>&1 \
             || warn "    materialise-paths failed for $APPLY"
+    fi
+    if [[ "$FLAGS" == "true" ]]; then
+        git -C "$TARGET" submodule update --init --recursive 2>/dev/null || warn "    submodule update failed"
     fi
     if [[ -f "$TARGET/install.sh" ]]; then
         (cd "$TARGET" && bash install.sh) || warn "    $APPLY install.sh exited non-zero"
@@ -207,18 +224,19 @@ PYEOF
 while IFS=$'\t' read -r REPO RELPATH; do
     [[ -z "$REPO" ]] && continue
     TARGET="$INSTALL_ROOT/$RELPATH"
-    if [[ -d "$TARGET/.git" ]]; then
-        echo "  [skip] $REPO already cloned at $RELPATH — pulling latest"
-        git -C "$TARGET" pull --ff-only 2>/dev/null || warn "  pull failed"
-    else
+    if [[ ! -d "$TARGET/.git" ]]; then
         mkdir -p "$(dirname "$TARGET")"
         echo "  [clone] $REPO → $RELPATH"
         git clone "git@github.com:$GITHUB_ORG/$REPO.git" "$TARGET"
+    else
+        echo "  [skip] $REPO already cloned at $RELPATH — syncing to origin"
     fi
-    # Materialise placeholders in shared repos too.
-    if [[ -x "$FRAMEWORK_DIR/scripts/portability/materialise-paths.sh" ]]; then
+    # Sync to origin + re-materialise (handles fresh clone and updates).
+    if command -v sync_repo_to_origin >/dev/null 2>&1; then
+        sync_repo_to_origin "$TARGET"
+    else
         TTC_AI_VAULT="$INSTALL_ROOT" TTC_HOME="$HOME" \
-            "$FRAMEWORK_DIR/scripts/portability/materialise-paths.sh" "$TARGET" >/dev/null \
+            "$FRAMEWORK_DIR/scripts/portability/materialise-paths.sh" "$TARGET" >/dev/null 2>&1 \
             || warn "  materialise-paths failed for $REPO"
     fi
     # Per-repo follow-up: mcp-proton needs npm install

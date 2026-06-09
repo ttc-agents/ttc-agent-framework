@@ -61,52 +61,50 @@ function Get-DefaultBranch {
 function Update-Repo {
     param([string]$Dir)
     if (-not (Test-Path (Join-Path $Dir ".git"))) { return }
-    $name = Split-Path $Dir -Leaf
 
-    $dirtyOutput = git -C $Dir status --porcelain 2>$null
-    $dirty = -not [string]::IsNullOrWhiteSpace($dirtyOutput)
-
-    if ($Force) {
-        $branch = Get-DefaultBranch -RepoDir $Dir
-        git -C $Dir fetch --quiet origin 2>$null
-        if ($LASTEXITCODE -ne 0) {
-            Write-WarnMsg "  $name -- fetch failed"
-            return
-        }
-        $before = (git -C $Dir rev-parse --short HEAD 2>$null).Trim()
-        git -C $Dir reset --hard "origin/$branch" --quiet 2>$null
-        if ($LASTEXITCODE -ne 0) {
-            Write-WarnMsg "  $name -- reset failed"
-            return
-        }
-        $after = (git -C $Dir rev-parse --short HEAD).Trim()
-        if ($dirty) {
-            Write-ResetMsg "  $name -- reset to origin/$branch ($before -> $after, local changes discarded)"
-        } elseif ($before -ne $after) {
-            Write-Ok "  $name -- reset to origin/$branch ($before -> $after)"
-        } else {
-            Write-Ok "  $name -- already at origin/$branch ($after)"
-        }
+    # Both default and -Force now go through Sync-RepoToOrigin: fetch -> guarded
+    # reset --hard origin/<branch> -> re-materialise. This is what finally lets a
+    # *materialised* (always-dirty) repo receive new commits and files (e.g. KB
+    # docs) — the old default mode skipped every dirty repo and never pulled.
+    if (Get-Command Sync-RepoToOrigin -ErrorAction SilentlyContinue) {
+        if ($Force) { Sync-RepoToOrigin -Target $Dir -Discard } else { Sync-RepoToOrigin -Target $Dir }
         return
     }
 
+    # Fallback (helper missing): preserve the previous best-effort behaviour.
+    $name = Split-Path $Dir -Leaf
+    $dirty = -not [string]::IsNullOrWhiteSpace((git -C $Dir status --porcelain 2>$null))
+    if ($Force) {
+        $branch = Get-DefaultBranch -RepoDir $Dir
+        git -C $Dir fetch --quiet origin 2>$null
+        if ($LASTEXITCODE -eq 0) {
+            git -C $Dir reset --hard "origin/$branch" --quiet 2>$null
+            Write-Ok "  $name -- reset to origin/$branch"
+        } else { Write-WarnMsg "  $name -- fetch failed" }
+        return
+    }
     if ($dirty) {
         Write-WarnMsg "  $name -- uncommitted changes, skipping (use -Force to discard and reset)"
         return
     }
     git -C $Dir pull --ff-only --quiet 2>$null
-    if ($LASTEXITCODE -eq 0) {
-        $h = (git -C $Dir log -1 --format='%h %s' | Out-String).Trim()
-        if ($h.Length -gt 70) { $h = $h.Substring(0, 70) }
-        Write-Ok "  $name -- $h"
-    } else {
-        Write-WarnMsg "  $name -- pull failed (non-FF?)"
-    }
+    if ($LASTEXITCODE -eq 0) { Write-Ok "  $name -- updated" } else { Write-WarnMsg "  $name -- pull failed (non-FF?)" }
 }
 
 $FrameworkDir = Join-Path $InstallRoot "ttc-agent-framework"
 $AgentsDir    = Join-Path $InstallRoot "Agents"
 $KbRuntimeDir = Join-Path $InstallRoot "Claude Folder"
+
+# Source the shared sync helper before any Update-Repo call.
+$env:TTC_AI_VAULT      = $InstallRoot
+$env:TTC_FRAMEWORK_DIR = $FrameworkDir
+$env:TTC_HOME          = $env:USERPROFILE
+$SyncHelper = Join-Path $FrameworkDir "scripts\portability\sync-repo.ps1"
+if (Test-Path $SyncHelper) {
+    . $SyncHelper
+} else {
+    Write-WarnMsg "sync helper not found at $SyncHelper -- falling back to ff-only pulls"
+}
 
 Write-Host ""
 if ($Force) {
@@ -193,7 +191,7 @@ if (Test-Path $Materialiser) {
         (Join-Path $InstallRoot "Tools\mcp-proton")
     )) {
         if (Test-Path (Join-Path $shared ".git")) {
-            try { & $Materialiser -Path $shared | Out-Null } catch { Write-WarnMsg "  materialise failed for $shared: $_" }
+            try { & $Materialiser -Path $shared | Out-Null } catch { Write-WarnMsg "  materialise failed for ${shared}: $_" }
         }
     }
     # Non-repo directories that still need materialising (sanitised content arrives
@@ -203,7 +201,7 @@ if (Test-Path $Materialiser) {
         (Join-Path $InstallRoot "Claude Folder")
     )) {
         if (Test-Path $nonrepo) {
-            try { & $Materialiser -Path $nonrepo | Out-Null } catch { Write-WarnMsg "  materialise failed for $nonrepo: $_" }
+            try { & $Materialiser -Path $nonrepo | Out-Null } catch { Write-WarnMsg "  materialise failed for ${nonrepo}: $_" }
         }
     }
     Write-Ok "  Placeholders materialised across agents + shared repos + Claude Folder"

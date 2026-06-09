@@ -70,19 +70,31 @@ TARGET="$AGENTS_DIR/$DIR"
 
 mkdir -p "$AGENTS_DIR"
 
-if [[ -d "$TARGET/.git" ]]; then
-    echo "[skip] $REPO already cloned - pulling latest"
-    git -C "$TARGET" pull --ff-only
-    if [[ "$SUBMODULES" == "true" ]]; then
-        git -C "$TARGET" submodule update --init --recursive
-    fi
-else
+# Source the shared sync helper so updates go through the guarded
+# fetch → reset --hard → re-materialise path (and so this agent actually gets
+# materialised — add-agent.sh previously skipped materialisation entirely).
+export TTC_AI_VAULT="$INSTALL_ROOT" TTC_FRAMEWORK_DIR="$FRAMEWORK_DIR" TTC_HOME="$HOME"
+SYNC_HELPER="$FRAMEWORK_DIR/scripts/portability/sync-repo.sh"
+[[ -f "$SYNC_HELPER" ]] && source "$SYNC_HELPER"
+
+if [[ ! -d "$TARGET/.git" ]]; then
     echo "[clone] $GITHUB_ORG/$REPO -> $TARGET (SSH)"
     if [[ "$SUBMODULES" == "true" ]]; then
         git clone --recurse-submodules "git@github.com:$GITHUB_ORG/$REPO.git" "$TARGET"
     else
         git clone "git@github.com:$GITHUB_ORG/$REPO.git" "$TARGET"
     fi
+else
+    echo "[skip] $REPO already cloned - syncing to origin"
+fi
+# Sync to origin + materialise (replaces the silent-failing `pull --ff-only`).
+if command -v sync_repo_to_origin >/dev/null 2>&1; then
+    sync_repo_to_origin "$TARGET"
+elif [[ -x "$FRAMEWORK_DIR/scripts/portability/materialise-paths.sh" ]]; then
+    "$FRAMEWORK_DIR/scripts/portability/materialise-paths.sh" "$TARGET" >/dev/null 2>&1 || true
+fi
+if [[ "$SUBMODULES" == "true" ]]; then
+    git -C "$TARGET" submodule update --init --recursive
 fi
 
 if [[ -f "$TARGET/install.sh" ]]; then

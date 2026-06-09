@@ -63,55 +63,41 @@ default_branch() {
     [[ -n "$b" ]] && echo "$b" || echo "main"
 }
 
+# Source the shared sync helper. Both default and --force modes now go through
+# sync_repo_to_origin: fetch → guarded reset --hard origin/<branch> →
+# re-materialise. This is what finally lets a *materialised* (always-dirty)
+# repo receive new commits and files (e.g. KB docs) — the old default mode
+# skipped every dirty repo and silently never pulled them.
+export TTC_AI_VAULT="$INSTALL_ROOT" TTC_FRAMEWORK_DIR="$FRAMEWORK_DIR" TTC_HOME="$HOME"
+SYNC_HELPER="$FRAMEWORK_DIR/scripts/portability/sync-repo.sh"
+if [[ -f "$SYNC_HELPER" ]]; then
+    source "$SYNC_HELPER"
+else
+    warn "sync helper not found at $SYNC_HELPER — falling back to ff-only pulls"
+fi
+
 pull_repo() {
     local dir="$1"
-    local name
-    name="$(basename "$dir")"
-    if [[ ! -d "$dir/.git" ]]; then
-        return 0  # skip non-git dirs silently
-    fi
-
-    local dirty=0
-    if [[ -n "$(git -C "$dir" status --porcelain 2>/dev/null)" ]]; then
-        dirty=1
-    fi
-
-    # Force mode: GitHub is truth → fetch + hard reset to origin/<default>.
-    # Working-tree changes are discarded; gitignored files (working/, .venv,
-    # *.log, .DS_Store) are untouched because reset --hard doesn't remove
-    # ignored files.
-    if [[ "$FORCE" == "1" ]]; then
-        local branch before after
-        branch="$(default_branch "$dir")"
-        if ! git -C "$dir" fetch --quiet origin 2>/dev/null; then
-            warn "  $name — fetch failed"
-            return 0
-        fi
-        before="$(git -C "$dir" rev-parse --short HEAD 2>/dev/null || echo '?')"
-        if git -C "$dir" reset --hard "origin/$branch" --quiet 2>/dev/null; then
-            after="$(git -C "$dir" rev-parse --short HEAD)"
-            if [[ "$dirty" == "1" ]]; then
-                reset_msg "  $name — reset to origin/$branch ($before → $after, local changes discarded)"
-            elif [[ "$before" != "$after" ]]; then
-                ok "  $name — reset to origin/$branch ($before → $after)"
-            else
-                ok "  $name — already at origin/$branch ($after)"
-            fi
+    [[ -d "$dir/.git" ]] || return 0  # skip non-git dirs silently
+    if command -v sync_repo_to_origin >/dev/null 2>&1; then
+        if [[ "$FORCE" == "1" ]]; then
+            sync_repo_to_origin "$dir" --discard
         else
-            warn "  $name — reset failed"
+            sync_repo_to_origin "$dir"
         fi
         return 0
     fi
-
-    # Default mode: skip dirty, FF-only pull.
-    if [[ "$dirty" == "1" ]]; then
-        warn "  $name — uncommitted changes, skipping (use --force to discard and reset to origin)"
-        return 0
-    fi
-    if git -C "$dir" pull --ff-only --quiet 2>/dev/null; then
-        local h
-        h="$(git -C "$dir" log -1 --format='%h %s' | cut -c1-70)"
-        ok  "  $name — $h"
+    # Fallback (helper missing): preserve the previous best-effort behaviour.
+    local name; name="$(basename "$dir")"
+    if [[ "$FORCE" == "1" ]]; then
+        local branch; branch="$(default_branch "$dir")"
+        git -C "$dir" fetch --quiet origin 2>/dev/null && \
+            git -C "$dir" reset --hard "origin/$branch" --quiet 2>/dev/null \
+            && ok "  $name — reset to origin/$branch" || warn "  $name — update failed"
+    elif [[ -n "$(git -C "$dir" status --porcelain 2>/dev/null)" ]]; then
+        warn "  $name — uncommitted changes, skipping (use --force)"
+    elif git -C "$dir" pull --ff-only --quiet 2>/dev/null; then
+        ok "  $name — $(git -C "$dir" log -1 --format='%h %s' | cut -c1-70)"
     else
         warn "  $name — pull failed (non-FF?)"
     fi
@@ -171,9 +157,14 @@ if [[ "$FORCE" == "1" ]] \
     echo ""
 fi
 
-# 1. Framework
+# 1. Framework — update first; if it advanced, re-exec so the rest of this run
+# uses the new code (avoids rewriting the running script mid-flight).
 log "Updating framework..."
-pull_repo "$FRAMEWORK_DIR"
+if command -v sync_framework_and_reexec >/dev/null 2>&1; then
+    TTC_SYNC_DISCARD="$FORCE" sync_framework_and_reexec "$FRAMEWORK_DIR" "$FRAMEWORK_DIR/scripts/update-all.sh" ${@+"$@"}
+else
+    pull_repo "$FRAMEWORK_DIR"
+fi
 
 # 2. All agents
 echo ""
