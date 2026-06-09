@@ -76,15 +76,18 @@ else
     warn "sync helper not found at $SYNC_HELPER — falling back to ff-only pulls"
 fi
 
+SYNC_FAILURES=0
 pull_repo() {
     local dir="$1"
     [[ -d "$dir/.git" ]] || return 0  # skip non-git dirs silently
     if command -v sync_repo_to_origin >/dev/null 2>&1; then
+        local rc=0
         if [[ "$FORCE" == "1" ]]; then
-            sync_repo_to_origin "$dir" --discard
+            sync_repo_to_origin "$dir" --discard || rc=$?
         else
-            sync_repo_to_origin "$dir"
+            sync_repo_to_origin "$dir" || rc=$?
         fi
+        [[ $rc -ne 0 ]] && SYNC_FAILURES=$((SYNC_FAILURES + 1))   # B2: track for exit status
         return 0
     fi
     # Fallback (helper missing): preserve the previous best-effort behaviour.
@@ -239,5 +242,10 @@ else
 fi
 
 echo ""
+if [[ "${SYNC_FAILURES:-0}" -gt 0 ]]; then
+    warn "Update finished with $SYNC_FAILURES repo(s) that did NOT sync (fetch/reset failed — see warnings above)."
+    warn "System-prompt changes take effect in the next conversation."
+    exit 1
+fi
 ok  "Update complete. System-prompt changes take effect in the next conversation."
 echo ""

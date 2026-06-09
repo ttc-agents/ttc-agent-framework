@@ -43,6 +43,43 @@ function Invoke-SrMaterialise {
     catch { Write-SrWarn "  $(Split-Path $Dir -Leaf) -- materialise-paths failed: $_" }
 }
 
+# Decide whether the tree holds genuine authored content (beyond materialisation)
+# WITHOUT mutating the live tree (mirrors bash _sr_has_authored_edits / H1).
+# Copies changed tracked files to a temp dir, sanitises the COPIES, and compares
+# each against its HEAD blob via `git diff --no-index` (byte-faithful, and
+# --ignore-cr-at-eol so Windows autocrlf checkouts don't read as authored).
+function Test-SrAuthoredEdits {
+    param([string]$Dir, [string]$Sanitiser)
+    $names = @(git -C $Dir diff --name-only HEAD 2>$null | Where-Object { $_ })
+    if ($names.Count -eq 0) { return $false }
+    $tmp = Join-Path ([IO.Path]::GetTempPath()) ("srchk_" + [guid]::NewGuid().ToString('N').Substring(0,8))
+    New-Item -ItemType Directory -Path $tmp -Force | Out-Null
+    $authored = $false
+    try {
+        foreach ($f in $names) {
+            $src = Join-Path $Dir $f
+            if (-not (Test-Path -LiteralPath $src)) { $authored = $true; break }   # deleted tracked = authored
+            $dest = Join-Path $tmp $f
+            New-Item -ItemType Directory -Path (Split-Path $dest -Parent) -Force | Out-Null
+            Copy-Item -LiteralPath $src -Destination $dest -Force
+        }
+        if (-not $authored) {
+            & $Sanitiser -Path $tmp | Out-Null
+            $headFile = Join-Path $tmp "__headblob.tmp"
+            foreach ($f in $names) {
+                $dest = Join-Path $tmp $f
+                if (-not (Test-Path -LiteralPath $dest)) { continue }
+                # Byte-faithful extraction of the HEAD blob via cmd redirection
+                # (the PS pipeline would mangle encoding/newlines).
+                & cmd /c "git -C `"$Dir`" show `"HEAD:$f`" > `"$headFile`" 2>nul"
+                git diff --no-index --quiet --ignore-cr-at-eol -- "$headFile" "$dest" 2>$null
+                if ($LASTEXITCODE -ne 0) { $authored = $true; break }
+            }
+        }
+    } finally { Remove-Item -Recurse -Force $tmp -ErrorAction SilentlyContinue }
+    return $authored
+}
+
 function Sync-RepoToOrigin {
     param(
         [Parameter(Mandatory = $true, Position = 0)]
@@ -59,7 +96,13 @@ function Sync-RepoToOrigin {
                else { Join-Path $env:USERPROFILE "AI-Vault" }
     $fwDir = if ($env:TTC_FRAMEWORK_DIR) { $env:TTC_FRAMEWORK_DIR } else { Join-Path $aivault "ttc-agent-framework" }
     $materialiser = Join-Path $fwDir "scripts\portability\materialise-paths.ps1"
-    $sanitiser    = Join-Path $aivault "scripts\portability\sanitise-paths.ps1"
+    # Sanitiser ships with the framework (so Guard 2 works on Windows too);
+    # fall back to the AI-Vault-root copy used by the Mac auto-commit pipeline.
+    $sanitiser    = Join-Path $fwDir "scripts\portability\sanitise-paths.ps1"
+    if (-not (Test-Path $sanitiser)) {
+        $altSan = Join-Path $aivault "scripts\portability\sanitise-paths.ps1"
+        if (Test-Path $altSan) { $sanitiser = $altSan }
+    }
 
     # Fetch -- surface failure, never reset against a stale remote-tracking ref.
     git -C $Target fetch --quiet origin 2>$null
@@ -77,15 +120,13 @@ function Sync-RepoToOrigin {
             Invoke-SrMaterialise -Dir $Target -Materialiser $materialiser
             return
         }
-        # Guard 2 -- authored working-tree edits (only where a PS sanitiser exists).
-        if (Test-Path $sanitiser) {
-            try { & $sanitiser -Path $Target | Out-Null } catch { }
-            git -C $Target diff --quiet HEAD -- . 2>$null
-            if ($LASTEXITCODE -ne 0) {
-                Write-SrWarn "  $name -- authored edits present; skipping reset (leaving for auto-commit), re-materialising"
-                Invoke-SrMaterialise -Dir $Target -Materialiser $materialiser
-                return
-            }
+        # Guard 2 -- authored working-tree edits. NON-MUTATING: sanitises temp
+        # copies, never the live tree (W1 ships a PS sanitiser so this now runs
+        # on Windows too, not just the Mac).
+        if ((Test-Path $sanitiser) -and (Test-SrAuthoredEdits -Dir $Target -Sanitiser $sanitiser)) {
+            Write-SrWarn "  $name -- authored edits present; skipping reset (leaving for auto-commit), re-materialising"
+            Invoke-SrMaterialise -Dir $Target -Materialiser $materialiser
+            return
         }
     }
 
