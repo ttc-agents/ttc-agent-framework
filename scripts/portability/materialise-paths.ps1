@@ -5,12 +5,12 @@
 # Windows / PowerShell 5.1 compatible. ASCII, no BOM.
 #
 # Substitutions:
-#   /Users/joergpietzsch/AI-Vault         -> $env:TTC_AI_VAULT (or $env:USERPROFILE\AI-Vault)
-#   /Users/joergpietzsch             -> $env:TTC_HOME     (or $env:USERPROFILE)
+#   {{AI_VAULT}}         -> $env:TTC_AI_VAULT (or $env:USERPROFILE\AI-Vault)
+#   {{HOME}}             -> $env:TTC_HOME     (or $env:USERPROFILE)
 #   {{ONEDRIVE_SHARED}}  -> probed per host:
 #                              <home>/TTC Global/Joerg Pietzsch -            (team member, default Windows SharedLibraries mount)
 #                           OR <home>/OneDrive - TTC Global/                 (Joerg, owner — personal mount)
-#                          The placeholder syntax /Users/joergpietzsch/Library/CloudStorage/OneDrive-TTCGlobal/<Folder>/...
+#                          The placeholder syntax {{ONEDRIVE_SHARED}}/<Folder>/...
 #                          ensures the suffix joins cleanly with either form.
 #                          Probe tracer folder: "Sales".
 #
@@ -113,11 +113,11 @@ function Invoke-MaterialiseFile {
 
     if ($content -notmatch '\{\{(AI_VAULT|HOME|ONEDRIVE_SHARED)\}\}') { return }
 
-    # Order: /Users/joergpietzsch/Library/CloudStorage/OneDrive-TTCGlobal/ FIRST (its substitution already contains a fully-
+    # Order: {{ONEDRIVE_SHARED}}/ FIRST (its substitution already contains a fully-
     # resolved $HOME, so no inner placeholder to re-expand).
-    $newContent = $content.Replace('/Users/joergpietzsch/Library/CloudStorage/OneDrive-TTCGlobal/', $OnedriveSharedFwd) `
-                          .Replace('/Users/joergpietzsch/AI-Vault', $AiVaultFwd) `
-                          .Replace('/Users/joergpietzsch', $HomeRootFwd)
+    $newContent = $content.Replace('{{ONEDRIVE_SHARED}}/', $OnedriveSharedFwd) `
+                          .Replace('{{AI_VAULT}}', $AiVaultFwd) `
+                          .Replace('{{HOME}}', $HomeRootFwd)
 
     if ($newContent -eq $content) { return }
 

@@ -5,8 +5,8 @@
 # Reverse direction (fresh clone on user machine → ready-to-run).
 #
 # Substitutions:
-#   /Users/joergpietzsch/AI-Vault        -> ${TTC_AI_VAULT:-$HOME/AI-Vault}
-#   /Users/joergpietzsch            -> $HOME
+#   {{AI_VAULT}}        -> ${TTC_AI_VAULT:-$HOME/AI-Vault}
+#   {{HOME}}            -> $HOME
 #   {{ONEDRIVE_SHARED}} -> probed per host: either
 #                            $HOME/Library/CloudStorage/OneDrive-TTCGlobal              (Joerg, owner)
 #                          OR
@@ -38,7 +38,7 @@ if [ -n "${TTC_ONEDRIVE_SHARED:-}" ]; then
     _ONEDRIVE_SHARED="$TTC_ONEDRIVE_SHARED"
 elif [ -d "$TTC_HOME/Library/CloudStorage/OneDrive-SharedLibraries-TTCGlobal/Joerg Pietzsch - Sales" ]; then
     # Team member: shares appear via SharedLibraries mount with "Joerg Pietzsch - " prefix.
-    # Note no trailing slash — the placeholder syntax /Users/joergpietzsch/Library/CloudStorage/OneDrive-TTCGlobal/<F>/... means
+    # Note no trailing slash — the placeholder syntax {{ONEDRIVE_SHARED}}/<F>/... means
     # the substitution string must end such that <F> joins onto it cleanly.
     _ONEDRIVE_SHARED="$TTC_HOME/Library/CloudStorage/OneDrive-SharedLibraries-TTCGlobal/Joerg Pietzsch - "
 elif [ -d "$TTC_HOME/Library/CloudStorage/OneDrive-TTCGlobal/Sales" ]; then
@@ -60,12 +60,12 @@ _AI_VAULT_ESC=$(_sed_escape "$TTC_AI_VAULT")
 _HOME_ESC=$(_sed_escape "$TTC_HOME")
 _ONEDRIVE_SHARED_ESC=$(_sed_escape "$_ONEDRIVE_SHARED")
 
-# Order: substitute /Users/joergpietzsch/Library/CloudStorage/OneDrive-TTCGlobal/ FIRST (before /Users/joergpietzsch) — the OneDrive prefix
+# Order: substitute {{ONEDRIVE_SHARED}}/ FIRST (before {{HOME}}) — the OneDrive prefix
 # already includes a fully-resolved $HOME, so no inner placeholder to expand.
 _MATERIALISE_SED_SCRIPT="
-  s|/Users/joergpietzsch/Library/CloudStorage/OneDrive-TTCGlobal/|${_ONEDRIVE_SHARED_ESC}|g
-  s|/Users/joergpietzsch/AI-Vault|${_AI_VAULT_ESC}|g
-  s|/Users/joergpietzsch|${_HOME_ESC}|g
+  s|{{ONEDRIVE_SHARED}}/|${_ONEDRIVE_SHARED_ESC}|g
+  s|{{AI_VAULT}}|${_AI_VAULT_ESC}|g
+  s|{{HOME}}|${_HOME_ESC}|g
 "
 
 materialise_file() {
