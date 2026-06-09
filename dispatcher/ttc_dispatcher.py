@@ -189,11 +189,29 @@ def next_fire_time(fire_times, now):
     return min(candidates) if candidates else None
 
 
+HEARTBEAT = Path.home() / "AI-Vault/scripts/heartbeat.sh"
+
+
+def heartbeat(job_name: str, ok: bool, msg: str = "") -> None:
+    """Write a heartbeat line to automation-health.md (best-effort, never raises)."""
+    if not HEARTBEAT.exists():
+        return
+    try:
+        status = "OK" if ok else "FAIL"
+        cmd = ["/bin/sh", str(HEARTBEAT), job_name, status]
+        if msg:
+            cmd.append(msg[:80])
+        subprocess.run(cmd, timeout=10, check=False)
+    except Exception:
+        pass  # heartbeat must never abort the caller
+
+
 def run_task(task):
     """Execute a task script, appending output to its log file."""
     script = task["script"]
     if not os.path.isfile(script):
         log(f"  SKIP {task['name']}: script not found: {script}")
+        heartbeat(task["name"], False, "script not found")
         return -1
 
     cmd = [task["python"], script] + task.get("args", [])
@@ -205,12 +223,16 @@ def run_task(task):
             result = subprocess.run(
                 cmd, stdout=logf, stderr=logf, timeout=600
             )
+        ok = result.returncode == 0
+        heartbeat(task["name"], ok, "" if ok else f"rc={result.returncode}")
         return result.returncode
     except subprocess.TimeoutExpired:
         log(f"  TIMEOUT: {task['name']} (killed after 600s)")
+        heartbeat(task["name"], False, "timeout 600s")
         return -1
     except Exception as e:
         log(f"  ERROR running {task['name']}: {e}")
+        heartbeat(task["name"], False, str(e)[:80])
         return -1
 
 

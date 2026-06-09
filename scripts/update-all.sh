@@ -210,6 +210,36 @@ if [[ -f "$KB_DOCS_SRC" ]]; then
     ok  "  KB_CONVENTIONS.md → $INSTALL_ROOT/docs/"
 fi
 
+# 4b. Refresh Leads shared files from the framework's versioned copy.
+# These files (_partition-law.md, _template/, _generic/, _dispatch/) are the source of truth
+# in ttc-agent-framework/leads/ and are copied to Agents/Leads/ for runtime use.
+echo ""
+log "Refreshing Leads shared files..."
+LEADS_SRC="$FRAMEWORK_DIR/leads"
+LEADS_RUNTIME="$AGENTS_DIR/Leads"
+if [[ -d "$LEADS_SRC" ]] && [[ -d "$LEADS_RUNTIME" ]]; then
+    cp "$LEADS_SRC/_partition-law.md" "$LEADS_RUNTIME/_partition-law.md"
+    ok  "  _partition-law.md → $LEADS_RUNTIME/"
+else
+    warn "  Leads shared files: src ($LEADS_SRC) or dest ($LEADS_RUNTIME) missing — skipped"
+fi
+
+# 4c. Check agent roster drift (warn-only — does NOT auto-write).
+# The single source of truth is install-config.json; CLAUDE.md is the generated output.
+# Run: generate-roster.py --write  to apply changes.
+echo ""
+log "Checking agent roster drift (Claude-Config/CLAUDE.md vs install-config.json)..."
+ROSTER_SCRIPT="$FRAMEWORK_DIR/scripts/generate-roster.py"
+if [[ -f "$ROSTER_SCRIPT" ]]; then
+    if python3 "$ROSTER_SCRIPT" --check 2>/dev/null; then
+        ok  "  Roster is in sync"
+    else
+        warn "  Agent roster has drifted — run: python3 $ROSTER_SCRIPT --write"
+    fi
+else
+    warn "  generate-roster.py not found at $ROSTER_SCRIPT — skipped"
+fi
+
 # 5. Materialise {{AI_VAULT}} / {{HOME}} placeholders in newly-pulled files.
 # Idempotent — files with no placeholders are skipped. Runs on every update
 # so freshly-pulled files always reflect this machine's real paths.

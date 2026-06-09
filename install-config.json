@@ -104,7 +104,8 @@
       "dir": "BwBm",
       "apply": "bwbm",
       "submodules": false,
-      "auto_install": true
+      "auto_install": false,
+      "note": "ARCHIVED 2026-06-01. BwBm migrated to ttc-agent-lead-bwbm (Leads/bwbm/). Repo kept read-only for historical reference. Local dir Agents/BwBm/ contains only MOVED.md."
     },
     {
       "repo": "ttc-agent-docs",
@@ -223,6 +224,38 @@
       "note": "TTC team read-only Sales agent. Queries OneDrive Network KB snapshot. Safe to install on any team member's machine."
     },
     {
+      "repo": null,
+      "dir": "OpenDesk",
+      "apply": "opendesk",
+      "submodules": false,
+      "auto_install": false,
+      "note": "Local-only agent (no GitHub repo). Joerg's OpenDesk/Nextcloud integration helper. Not distributed — no source control, must be kept manually in sync across machines."
+    },
+    {
+      "repo": null,
+      "dir": "AutoLead",
+      "apply": "autolead",
+      "submodules": false,
+      "auto_install": false,
+      "note": "Local git repo (no GitHub remote yet). Orchestrates TAF test lifecycle; dispatches subagents test-designer/taf-author/taf-healer/triage. Not yet distributed — promote to ttc-agents org when subagent schema stabilises."
+    },
+    {
+      "repo": null,
+      "dir": "Leads/_generic",
+      "apply": "customer",
+      "submodules": false,
+      "auto_install": true,
+      "note": "Generic lead template — deployed from ttc-agent-framework/leads/_generic/ by install.sh/update-all.sh. Handles long-tail customers via 'apply customer <slug>'."
+    },
+    {
+      "repo": null,
+      "dir": "AppDev",
+      "apply": "appdev",
+      "submodules": false,
+      "auto_install": false,
+      "note": "PRIVATE/non-TTC. Local git repo, no GitHub remote. CardBenefits UAE app orchestrator (5 stack-aligned subagents). Deliberately excluded from ttc-agents distribution. Detail: Agents/Infrastructure/memory/appdev-agent.md"
+    },
+    {
       "repo": "ttc-agent-lead-bwbm",
       "dir": "Leads/bwbm",
       "apply": "bwbm",
@@ -264,5 +297,8 @@
       "submodules": false,
       "auto_install": true
     }
-  ]
+  ],
+  "_excluded_agents_note": {
+    "AppDev": "Deliberately excluded from ttc-agents distribution. PRIVATE/non-TTC agent for the CardBenefits UAE app. Local git repo, no GitHub remote. Orchestrates 5 stack-aligned subagents (data/backend/ios/qa/infra). Detail: Agents/Infrastructure/memory/appdev-agent.md"
+  }
 }
