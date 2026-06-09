@@ -61,6 +61,12 @@ function Get-DefaultBranch {
 function Update-Repo {
     param([string]$Dir)
     if (-not (Test-Path (Join-Path $Dir ".git"))) { return }
+    # The helper checks $LASTEXITCODE after native git calls rather than catching
+    # exceptions, so it was authored for EAP=Continue (like install/add-agent).
+    # update-all.ps1 runs under EAP=Stop, where Windows PowerShell 5.1 can turn a
+    # native git stderr write into a terminating error even on exit 0. Scope it
+    # to Continue here so the sync calls behave as designed.
+    $ErrorActionPreference = 'Continue'
 
     # Both default and -Force now go through Sync-RepoToOrigin: fetch -> guarded
     # reset --hard origin/<branch> -> re-materialise. This is what finally lets a

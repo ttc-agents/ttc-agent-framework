@@ -71,8 +71,8 @@ function Sync-RepoToOrigin {
 
     if (-not $Discard) {
         # Guard 1 -- protect unpushed authored commits.
-        $ahead = (git -C $Target rev-list --count "origin/$br..HEAD" 2>$null)
-        if ($LASTEXITCODE -eq 0 -and [int]$ahead -gt 0) {
+        $ahead = (git -C $Target rev-list --count "origin/$br..HEAD" 2>$null | Select-Object -First 1)
+        if ($LASTEXITCODE -eq 0 -and -not [string]::IsNullOrWhiteSpace($ahead) -and [int]$ahead -gt 0) {
             Write-SrWarn "  $name -- $ahead local commit(s) not on origin; skipping reset (auto-commit owns these), re-materialising only"
             Invoke-SrMaterialise -Dir $Target -Materialiser $materialiser
             return
@@ -99,11 +99,18 @@ function Sync-RepoToOrigin {
         Invoke-SrMaterialise -Dir $Target -Materialiser $materialiser
         return
     }
-    $after = (git -C $Target rev-parse --short HEAD 2>$null).Trim()
+    $after = (git -C $Target rev-parse --short HEAD 2>$null)
+    if ($after) { $after = $after.Trim() } else { $after = '?' }
     if ($before -ne $after) {
         Write-SrOk "  $name -- synced to origin/$br ($before -> $after)"
     } else {
         Write-SrOk "  $name -- already at origin/$br ($after)"
+    }
+    # C2 -- advance submodules to the superproject's reset pointer (reset --hard
+    # moves the gitlink but never updates the submodule tree).
+    if (Test-Path (Join-Path $Target ".gitmodules")) {
+        git -C $Target submodule update --init --recursive 2>$null | Out-Null
+        if ($LASTEXITCODE -ne 0) { Write-SrWarn "  $name -- submodule update failed" }
     }
     Invoke-SrMaterialise -Dir $Target -Materialiser $materialiser
 }

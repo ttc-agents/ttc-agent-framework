@@ -60,6 +60,40 @@ _sr_materialise() {
         || _sr_warn "  $(basename "$dir") — materialise-paths failed"
 }
 
+# _sr_has_authored_edits <dir> <sanitiser>
+# Decide whether the working tree holds genuine authored content (beyond path
+# materialisation) — WITHOUT mutating the live tree (H1). Copies every changed
+# tracked file into a temp dir, sanitises the COPIES, and diffs each against its
+# HEAD blob: if a sanitised copy still differs from HEAD, that's authored
+# content. Returns 0 (true) if authored edits exist, 1 (false) if the only
+# difference is reproducible materialisation. A deleted/added tracked path also
+# counts as authored. Untracked files are out of scope here (see review C2).
+_sr_has_authored_edits() {
+    local dir="$1" sanitiser="$2"
+    local names; names="$(git -C "$dir" diff --name-only HEAD 2>/dev/null)"
+    [[ -z "$names" ]] && return 1   # no tracked changes at all
+    local tmpd; tmpd="$(mktemp -d)"
+    local rc=1 f
+    while IFS= read -r f; do
+        [[ -z "$f" ]] && continue
+        if [[ ! -f "$dir/$f" ]]; then rc=0; break; fi   # deleted tracked file = authored
+        mkdir -p "$tmpd/$(dirname "$f")"
+        cp "$dir/$f" "$tmpd/$f"
+    done <<< "$names"
+    if [[ $rc -eq 1 ]]; then
+        "$sanitiser" "$tmpd" >/dev/null 2>&1 || true     # sanitise the COPIES only
+        while IFS= read -r f; do
+            [[ -z "$f" ]] && continue
+            [[ -f "$tmpd/$f" ]] || continue
+            if ! git -C "$dir" show "HEAD:$f" 2>/dev/null | diff -q - "$tmpd/$f" >/dev/null 2>&1; then
+                rc=0; break
+            fi
+        done <<< "$names"
+    fi
+    rm -rf "$tmpd"
+    return $rc
+}
+
 # sync_repo_to_origin <target_dir> [--discard]
 sync_repo_to_origin() {
     local dir="" discard=0 a
@@ -105,17 +139,13 @@ sync_repo_to_origin() {
         fi
         # Guard 2 — protect authored working-tree edits (Joerg's machine only;
         # the sanitiser is absent on consumer installs, where Guard 1 suffices).
-        # Round-trip the tree through the sanitiser, then diff vs HEAD: anything
-        # left beyond materialisation is genuine authored content. Diff against
-        # HEAD (not origin) so a merely-behind repo still advances.
-        if [[ -x "$sanitiser" ]]; then
-            "$sanitiser" "$dir" >/dev/null 2>&1 || true
-            if ! git -C "$dir" diff --quiet HEAD -- . 2>/dev/null; then
-                _sr_warn "  $name — authored edits present; skipping reset (leaving for auto-commit), re-materialising"
-                _sr_materialise "$dir" "$materialiser"
-                return 0
-            fi
-            # Tree now == HEAD committed form; the reset below is a clean advance.
+        # NON-MUTATING (H1): _sr_has_authored_edits sanitises COPIES in a temp
+        # dir and diffs vs HEAD, so the live tree is never altered — an interrupt
+        # can no longer leave the repo in broken placeholder form.
+        if [[ -x "$sanitiser" ]] && _sr_has_authored_edits "$dir" "$sanitiser"; then
+            _sr_warn "  $name — authored edits present; skipping reset (leaving for auto-commit), re-materialising"
+            _sr_materialise "$dir" "$materialiser"
+            return 0
         fi
     fi
 
@@ -130,6 +160,14 @@ sync_repo_to_origin() {
         else
             _sr_ok "  $name — already at origin/$br ($after)"
         fi
+        # C2 — advance submodules to the superproject's reset pointer; reset
+        # --hard moves the gitlink but never updates the submodule tree, so
+        # update-all would otherwise leave a submodule-bearing repo (e.g. SAP)
+        # drifting. Fresh clones land here too (.gitmodules present post-clone).
+        if [[ -f "$dir/.gitmodules" ]]; then
+            git -C "$dir" submodule update --init --recursive >/dev/null 2>&1 \
+                || _sr_warn "  $name — submodule update failed"
+        fi
     else
         _sr_warn "  $name — reset to origin/$br failed; re-materialising in place"
         _sr_materialise "$dir" "$materialiser"
@@ -140,11 +178,19 @@ sync_repo_to_origin() {
 
 # sync_framework_and_reexec <framework_dir> <calling_script> [args...]
 # Sync the framework repo, then if it ADVANCED re-exec the calling script so the
-# rest of the run uses the new code. Safe against self-modification: this
-# function body is fully parsed at source time, so it can rewrite the on-disk
-# caller script (bash streams its input) without corrupting the current process.
-# Honours TTC_SYNC_DISCARD=1 to pass --discard through. Re-exec runs once
-# (guarded by TTC_REEXECED).
+# rest of the run uses the new code. Honours TTC_SYNC_DISCARD=1 to pass
+# --discard through. Re-exec runs once (guarded by TTC_REEXECED).
+#
+# Self-modification safety: syncing the framework rewrites files inside it —
+# including the running caller script (install.sh / update-all.sh) and this
+# helper. bash does NOT fully buffer a streamed script, so this is safe ONLY
+# because every writer replaces files by ATOMIC RENAME (materialise-paths.sh and
+# sanitise-paths.sh use mktemp+`mv -f`; git reset/checkout swap via the index):
+# the directory entry is repointed while bash keeps reading the ORIGINAL inode
+# behind its open fd. INVARIANT — never rewrite a running caller in place
+# (no `sed -i`/`>` without a temp file); that would truncate what bash reads and
+# silently run a partial tail. (This function body itself is parsed at
+# source time, so calling it after such a rewrite is independently safe.)
 sync_framework_and_reexec() {
     local fw="$1" self="${2:-}"; shift 2 2>/dev/null || shift $# 2>/dev/null
     [[ -d "$fw/.git" ]] || return 0
