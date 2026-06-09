@@ -4,8 +4,14 @@
 # Windows / PowerShell 5.1 compatible. ASCII, no BOM.
 #
 # Substitutions:
-#   {{AI_VAULT}}  -> $env:TTC_AI_VAULT (or $env:USERPROFILE\AI-Vault)
-#   {{HOME}}      -> $env:TTC_HOME     (or $env:USERPROFILE)
+#   {{AI_VAULT}}         -> $env:TTC_AI_VAULT (or $env:USERPROFILE\AI-Vault)
+#   {{HOME}}             -> $env:TTC_HOME     (or $env:USERPROFILE)
+#   {{ONEDRIVE_SHARED}}  -> probed per host:
+#                              <home>/TTC Global/Joerg Pietzsch -            (team member, default Windows SharedLibraries mount)
+#                           OR <home>/OneDrive - TTC Global/                 (Joerg, owner — personal mount)
+#                          The placeholder syntax {{ONEDRIVE_SHARED}}/<Folder>/...
+#                          ensures the suffix joins cleanly with either form.
+#                          Probe tracer folder: "Sales".
 #
 # Idempotent.
 #
@@ -14,7 +20,7 @@
 #   .\materialise-paths.ps1 -Path C:\path\to\file.md
 #
 # Environment overrides:
-#   $env:TTC_AI_VAULT, $env:TTC_HOME
+#   $env:TTC_AI_VAULT, $env:TTC_HOME, $env:TTC_ONEDRIVE_SHARED (skips probe)
 
 [CmdletBinding()]
 param(
@@ -53,6 +59,31 @@ if ($env:TTC_AI_VAULT) {
 $AiVaultFwd  = $AiVault  -replace '\\', '/'
 $HomeRootFwd = $HomeRoot -replace '\\', '/'
 
+# Probe the OneDrive-shared mount on this machine.
+# Common Windows variants for Joerg's shared folders:
+#   Team member:  $env:USERPROFILE\TTC Global\Joerg Pietzsch - <Folder>
+#                 (some setups also show as "OneDrive - SharedLibraries - TTC Global\...")
+#   Joerg:        $env:USERPROFILE\OneDrive - TTC Global\<Folder>
+# Probe tracer: "Sales" subfolder.
+if ($env:TTC_ONEDRIVE_SHARED) {
+    $OnedriveShared = $env:TTC_ONEDRIVE_SHARED
+} elseif (Test-Path -LiteralPath (Join-Path $HomeRoot 'TTC Global/Joerg Pietzsch - Sales')) {
+    # Team member (Win — shared folder mount)
+    $OnedriveShared = Join-Path $HomeRoot 'TTC Global/Joerg Pietzsch - '
+} elseif (Test-Path -LiteralPath (Join-Path $HomeRoot 'OneDrive - SharedLibraries - TTC Global/Joerg Pietzsch - Sales')) {
+    # Alternative team-member Windows layout
+    $OnedriveShared = Join-Path $HomeRoot 'OneDrive - SharedLibraries - TTC Global/Joerg Pietzsch - '
+} elseif (Test-Path -LiteralPath (Join-Path $HomeRoot 'OneDrive - TTC Global/Sales')) {
+    # Owner (Joerg) Windows variant
+    $OnedriveShared = Join-Path $HomeRoot 'OneDrive - TTC Global/'
+} else {
+    # Fall back to most-common team layout — agent files will materialise to a path
+    # that may not exist yet (e.g. share invite not accepted). Failure surfaces
+    # at agent-runtime with a clear "folder not found" rather than corrupting paths.
+    $OnedriveShared = Join-Path $HomeRoot 'TTC Global/Joerg Pietzsch - '
+}
+$OnedriveSharedFwd = $OnedriveShared -replace '\\', '/'
+
 # File extensions we treat as text.
 $TextExtensions = @(
     '.md', '.py', '.sh', '.json', '.ps1', '.yml', '.yaml',
@@ -79,9 +110,13 @@ function Invoke-MaterialiseFile {
         return
     }
 
-    if ($content -notmatch '\{\{(AI_VAULT|HOME)\}\}') { return }
+    if ($content -notmatch '\{\{(AI_VAULT|HOME|ONEDRIVE_SHARED)\}\}') { return }
 
-    $newContent = $content.Replace('{{AI_VAULT}}', $AiVaultFwd).Replace('{{HOME}}', $HomeRootFwd)
+    # Order: {{ONEDRIVE_SHARED}}/ FIRST (its substitution already contains a fully-
+    # resolved $HOME, so no inner placeholder to re-expand).
+    $newContent = $content.Replace('{{ONEDRIVE_SHARED}}/', $OnedriveSharedFwd) `
+                          .Replace('{{AI_VAULT}}', $AiVaultFwd) `
+                          .Replace('{{HOME}}', $HomeRootFwd)
 
     if ($newContent -eq $content) { return }
 
@@ -112,8 +147,9 @@ function Invoke-MaterialiseDir {
     }
 }
 
-Write-Host "AI_VAULT placeholder -> $AiVaultFwd"
-Write-Host "HOME placeholder     -> $HomeRootFwd"
+Write-Host "AI_VAULT placeholder        -> $AiVaultFwd"
+Write-Host "HOME placeholder            -> $HomeRootFwd"
+Write-Host "ONEDRIVE_SHARED placeholder -> $OnedriveSharedFwd"
 
 foreach ($p in $Path) {
     if (Test-Path -LiteralPath $p -PathType Container) {

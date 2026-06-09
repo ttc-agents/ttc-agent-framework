@@ -4,8 +4,14 @@
 # Reverse direction (fresh clone on user machine → ready-to-run).
 #
 # Substitutions:
-#   {{AI_VAULT}}  -> ${TTC_AI_VAULT:-$HOME/AI-Vault}
-#   {{HOME}}      -> $HOME
+#   {{AI_VAULT}}        -> ${TTC_AI_VAULT:-$HOME/AI-Vault}
+#   {{HOME}}            -> $HOME
+#   {{ONEDRIVE_SHARED}} -> probed per host: either
+#                            $HOME/Library/CloudStorage/OneDrive-TTCGlobal              (Joerg, owner)
+#                          OR
+#                            $HOME/Library/CloudStorage/OneDrive-SharedLibraries-TTCGlobal/Joerg Pietzsch -  (team member)
+#                          The placeholder is always written followed by /<FolderName>/...
+#                          so the substitution joins cleanly with either form.
 #
 # Idempotent: if a file has no placeholders, no-op.
 #
@@ -15,13 +21,34 @@
 #   $0 <file-or-dir> [more...]
 #
 # Environment overrides:
-#   TTC_AI_VAULT  — set to override the AI-Vault root (default: $HOME/AI-Vault)
-#   TTC_HOME      — set to override the HOME root (default: $HOME)
+#   TTC_AI_VAULT          — set to override the AI-Vault root (default: $HOME/AI-Vault)
+#   TTC_HOME              — set to override the HOME root (default: $HOME)
+#   TTC_ONEDRIVE_SHARED   — set to force the OneDrive-shared prefix (skips probe)
 
 set -euo pipefail
 
 : "${TTC_AI_VAULT:=${HOME}/AI-Vault}"
 : "${TTC_HOME:=${HOME}}"
+
+# Probe which OneDrive-shared variant exists on this machine.
+# "Sales" is used as a tracer because every shared user has it.
+# Probe deferrable via TTC_ONEDRIVE_SHARED (e.g. for testing / cross-machine builds).
+if [ -n "${TTC_ONEDRIVE_SHARED:-}" ]; then
+    _ONEDRIVE_SHARED="$TTC_ONEDRIVE_SHARED"
+elif [ -d "$TTC_HOME/Library/CloudStorage/OneDrive-SharedLibraries-TTCGlobal/Joerg Pietzsch - Sales" ]; then
+    # Team member: shares appear via SharedLibraries mount with "Joerg Pietzsch - " prefix.
+    # Note no trailing slash — the placeholder syntax {{ONEDRIVE_SHARED}}/<F>/... means
+    # the substitution string must end such that <F> joins onto it cleanly.
+    _ONEDRIVE_SHARED="$TTC_HOME/Library/CloudStorage/OneDrive-SharedLibraries-TTCGlobal/Joerg Pietzsch - "
+elif [ -d "$TTC_HOME/Library/CloudStorage/OneDrive-TTCGlobal/Sales" ]; then
+    # Owner (Joerg): shares are at his personal OneDrive-TTCGlobal mount.
+    _ONEDRIVE_SHARED="$TTC_HOME/Library/CloudStorage/OneDrive-TTCGlobal/"
+else
+    # Neither probe folder exists — fall back to team form (most common case).
+    # User may not yet have accepted the share invite; materialise the path anyway so
+    # the file will work once the share is added. The error surfaces at agent-runtime.
+    _ONEDRIVE_SHARED="$TTC_HOME/Library/CloudStorage/OneDrive-SharedLibraries-TTCGlobal/Joerg Pietzsch - "
+fi
 
 # Escape replacement strings for sed (& \ | newline).
 _sed_escape() {
@@ -30,8 +57,12 @@ _sed_escape() {
 
 _AI_VAULT_ESC=$(_sed_escape "$TTC_AI_VAULT")
 _HOME_ESC=$(_sed_escape "$TTC_HOME")
+_ONEDRIVE_SHARED_ESC=$(_sed_escape "$_ONEDRIVE_SHARED")
 
+# Order: substitute {{ONEDRIVE_SHARED}}/ FIRST (before {{HOME}}) — the OneDrive prefix
+# already includes a fully-resolved $HOME, so no inner placeholder to expand.
 _MATERIALISE_SED_SCRIPT="
+  s|{{ONEDRIVE_SHARED}}/|${_ONEDRIVE_SHARED_ESC}|g
   s|{{AI_VAULT}}|${_AI_VAULT_ESC}|g
   s|{{HOME}}|${_HOME_ESC}|g
 "
