@@ -35,18 +35,37 @@ if ($env:TTC_AI_VAULT) { $AiVault = $env:TTC_AI_VAULT } else { $AiVault = Join-P
 $AiVaultFwd  = $AiVault  -replace '\\', '/'
 $HomeRootFwd = $HomeRoot -replace '\\', '/'
 
-if ($env:TTC_ONEDRIVE_SHARED) {
-    $OnedriveShared = $env:TTC_ONEDRIVE_SHARED
-} elseif (Test-Path -LiteralPath (Join-Path $HomeRoot 'TTC Global/Joerg Pietzsch - Sales')) {
-    $OnedriveShared = Join-Path $HomeRoot 'TTC Global/Joerg Pietzsch - '
-} elseif (Test-Path -LiteralPath (Join-Path $HomeRoot 'OneDrive - SharedLibraries - TTC Global/Joerg Pietzsch - Sales')) {
-    $OnedriveShared = Join-Path $HomeRoot 'OneDrive - SharedLibraries - TTC Global/Joerg Pietzsch - '
-} elseif (Test-Path -LiteralPath (Join-Path $HomeRoot 'OneDrive - TTC Global/Sales')) {
-    $OnedriveShared = Join-Path $HomeRoot 'OneDrive - TTC Global/'
-} else {
-    $OnedriveShared = Join-Path $HomeRoot 'TTC Global/Joerg Pietzsch - '
+# Probe DEFENSIVELY. A Test-Path that throws (odd mount / bad drive) or a probe
+# miss must NEVER leave $OnedriveShared empty — an empty replace target below
+# would throw and abort the WHOLE substitution, leaving every path un-reversed.
+# Use string concat (not Join-Path, which resolves the drive and can throw).
+$OnedriveShared = $env:TTC_ONEDRIVE_SHARED
+if (-not $OnedriveShared) {
+    foreach ($cand in @(
+        @("$HomeRoot\TTC Global\Joerg Pietzsch - Sales",                              "$HomeRoot\TTC Global\Joerg Pietzsch - "),
+        @("$HomeRoot\OneDrive - SharedLibraries - TTC Global\Joerg Pietzsch - Sales", "$HomeRoot\OneDrive - SharedLibraries - TTC Global\Joerg Pietzsch - "),
+        @("$HomeRoot\OneDrive - TTC Global\Sales",                                    "$HomeRoot\OneDrive - TTC Global\")
+    )) {
+        try { if (Test-Path -LiteralPath $cand[0]) { $OnedriveShared = $cand[1]; break } } catch { }
+    }
 }
+if (-not $OnedriveShared) { $OnedriveShared = "$HomeRoot\TTC Global\Joerg Pietzsch - " }
 $OnedriveSharedFwd = $OnedriveShared -replace '\\', '/'
+
+# Reverse ALL known OneDrive mount forms (owner + two team layouts), not just the
+# one THIS machine probes to — a file may have been materialised on a different
+# mount (or by a SYSTEM context that can't see the user's OneDrive). All collapse
+# to {{ONEDRIVE_SHARED}}/. Forward-slash and backslash variants, plus whatever
+# was probed/overridden above.
+$OnedriveForms = @(
+    "$HomeRootFwd/OneDrive - TTC Global/",
+    "$HomeRootFwd/OneDrive - SharedLibraries - TTC Global/Joerg Pietzsch - ",
+    "$HomeRootFwd/TTC Global/Joerg Pietzsch - ",
+    "$HomeRoot\OneDrive - TTC Global\",
+    "$HomeRoot\OneDrive - SharedLibraries - TTC Global\Joerg Pietzsch - ",
+    "$HomeRoot\TTC Global\Joerg Pietzsch - ",
+    $OnedriveSharedFwd, $OnedriveShared
+)
 
 $TextExtensions = @('.md','.py','.sh','.json','.ps1','.yml','.yaml','.toml','.txt','.cfg','.ini','.plist','.xml','.ts','.tsx','.js','.jsx','.mjs','.cjs')
 $PruneDirs = @('.git','__pycache__','.venv','node_modules')
@@ -66,10 +85,25 @@ function Invoke-SanitiseFile {
     if ($head -match '#\s*SANITISE-SKIP') { return }
 
     # Reverse-order replace: ONEDRIVE and AI_VAULT before HOME (both contain the
-    # home prefix). Handle forward-slash (what the materialiser emits) AND the
-    # raw backslash form, defensively. No-op when no real path is present.
-    $new = $content.Replace($OnedriveSharedFwd, '{{ONEDRIVE_SHARED}}/').Replace($AiVaultFwd, '{{AI_VAULT}}').Replace($HomeRootFwd, '{{HOME}}')
-    $new = $new.Replace($OnedriveShared, '{{ONEDRIVE_SHARED}}/').Replace($AiVault, '{{AI_VAULT}}').Replace($HomeRoot, '{{HOME}}')
+    # home prefix). Forward-slash form first (what the materialiser emits), then
+    # the raw backslash form, defensively. Each replace is GUARDED against an
+    # empty target: String.Replace("", x) throws, and a chained throw would abort
+    # the whole substitution and leave EVERY path un-reversed (the bug that made
+    # Guard 2 flag every materialised file as "authored").
+    $new = $content
+    # OneDrive forms FIRST (they contain the home prefix), then AI_VAULT (also
+    # contains home), then HOME. All guarded against an empty target.
+    foreach ($od in $OnedriveForms) {
+        if (-not [string]::IsNullOrEmpty($od)) { $new = $new.Replace($od, '{{ONEDRIVE_SHARED}}/') }
+    }
+    foreach ($sub in @(
+        @($AiVaultFwd,  '{{AI_VAULT}}'),
+        @($AiVault,     '{{AI_VAULT}}'),
+        @($HomeRootFwd, '{{HOME}}'),
+        @($HomeRoot,    '{{HOME}}')
+    )) {
+        if (-not [string]::IsNullOrEmpty($sub[0])) { $new = $new.Replace($sub[0], $sub[1]) }
+    }
 
     if ($new -eq $content) { return }
     try {
