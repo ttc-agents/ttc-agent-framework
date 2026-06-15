@@ -155,8 +155,8 @@
       "dir": "Personal",
       "apply": "personal",
       "submodules": false,
-      "auto_install": false,
-      "note": "Sanitized template. Conflicts with ttc-agent-personal. Install via: add-agent personal-template"
+      "auto_install": true,
+      "note": "Sanitized Personal/Head agent (no owner data). Auto-installs as 'apply personal' for team members. MUST stay listed AFTER ttc-agent-personal: owners who can read the live repo get it instead (the seen_dir dedup skips this template on their machines). Each user accumulates their own local data in their own clone."
     },
     {
       "repo": "ttc-agent-private",
