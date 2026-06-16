@@ -6,8 +6,8 @@
     "adnoc": {
       "display_name": "ADNOC",
       "region": "Middle East",
-      "primary_folder": "{{ONEDRIVE_SHARED}}/Sales/Customer/Middle East/ADNOC",
-      "ai_info_folder": "{{ONEDRIVE_SHARED}}/Sales/Customer/Middle East/ADNOC/AI-INFO - DO NOT DELETE",
+      "primary_folder": "/Users/joergpietzsch/Library/CloudStorage/OneDrive-TTCGlobal/Sales/Customer/Middle East/ADNOC",
+      "ai_info_folder": "/Users/joergpietzsch/Library/CloudStorage/OneDrive-TTCGlobal/Sales/Customer/Middle East/ADNOC/AI-INFO - DO NOT DELETE",
       "created": "2026-04-20",
       "active_agents": [],
       "status": "lost",
@@ -17,12 +17,12 @@
     "central-bank-uae": {
       "display_name": "Central Bank UAE",
       "region": "Middle East",
-      "primary_folder": "{{ONEDRIVE_SHARED}}/Sales/Customer/Middle East/Central Bank UAE",
-      "ai_info_folder": "{{ONEDRIVE_SHARED}}/Sales/Customer/Middle East/Central Bank UAE/AI-INFO - DO NOT DELETE",
+      "primary_folder": "/Users/joergpietzsch/Library/CloudStorage/OneDrive-TTCGlobal/Sales/Customer/Middle East/Central Bank UAE",
+      "ai_info_folder": "/Users/joergpietzsch/Library/CloudStorage/OneDrive-TTCGlobal/Sales/Customer/Middle East/Central Bank UAE/AI-INFO - DO NOT DELETE",
       "lead": "dedicated",
       "lead_path": "Agents/Leads/cbuae/",
       "restricted_ai_info": "",
-      "worklog": "{{ONEDRIVE_SHARED}}/Sales/Customer/Middle East/Central Bank UAE/AI-INFO - DO NOT DELETE/worklog.md",
+      "worklog": "/Users/joergpietzsch/Library/CloudStorage/OneDrive-TTCGlobal/Sales/Customer/Middle East/Central Bank UAE/AI-INFO - DO NOT DELETE/worklog.md",
       "created": "2026-04-20",
       "active_agents": [
         "contracts",
@@ -38,12 +38,12 @@
     "dubai-holdings-leapwork": {
       "display_name": "Dubai Holdings Leapwork",
       "region": "Middle East",
-      "primary_folder": "{{ONEDRIVE_SHARED}}/Sales/Customer/Middle East/Dubai Holdings Leapwork",
-      "ai_info_folder": "{{ONEDRIVE_SHARED}}/Sales/Customer/Middle East/Dubai Holdings Leapwork/AI-INFO - DO NOT DELETE",
+      "primary_folder": "/Users/joergpietzsch/Library/CloudStorage/OneDrive-TTCGlobal/Sales/Customer/Middle East/Dubai Holdings Leapwork",
+      "ai_info_folder": "/Users/joergpietzsch/Library/CloudStorage/OneDrive-TTCGlobal/Sales/Customer/Middle East/Dubai Holdings Leapwork/AI-INFO - DO NOT DELETE",
       "lead": "dedicated",
       "lead_path": "Agents/Leads/dubai-holding/",
       "restricted_ai_info": "",
-      "worklog": "{{ONEDRIVE_SHARED}}/Sales/Customer/Middle East/Dubai Holdings Leapwork/AI-INFO - DO NOT DELETE/worklog.md",
+      "worklog": "/Users/joergpietzsch/Library/CloudStorage/OneDrive-TTCGlobal/Sales/Customer/Middle East/Dubai Holdings Leapwork/AI-INFO - DO NOT DELETE/worklog.md",
       "created": "2026-04-20",
       "active_agents": [
         "contracts",
@@ -63,8 +63,8 @@
     "dubai-islamic-bank-oracle": {
       "display_name": "Dubai Islamic Bank (Oracle)",
       "region": "Middle East",
-      "primary_folder": "{{ONEDRIVE_SHARED}}/Sales/Customer/Middle East/Dubai Islamic Bank (Oracle)",
-      "ai_info_folder": "{{ONEDRIVE_SHARED}}/Sales/Customer/Middle East/Dubai Islamic Bank (Oracle)/AI-INFO - DO NOT DELETE",
+      "primary_folder": "/Users/joergpietzsch/Library/CloudStorage/OneDrive-TTCGlobal/Sales/Customer/Middle East/Dubai Islamic Bank (Oracle)",
+      "ai_info_folder": "/Users/joergpietzsch/Library/CloudStorage/OneDrive-TTCGlobal/Sales/Customer/Middle East/Dubai Islamic Bank (Oracle)/AI-INFO - DO NOT DELETE",
       "created": "2026-04-20",
       "active_agents": [
         "contracts",
@@ -77,14 +77,14 @@
       "lead": "dedicated",
       "lead_path": "Agents/Leads/dib/",
       "restricted_ai_info": "",
-      "worklog": "{{ONEDRIVE_SHARED}}/Sales/Customer/Middle East/Dubai Islamic Bank (Oracle)/AI-INFO - DO NOT DELETE/worklog.md",
+      "worklog": "/Users/joergpietzsch/Library/CloudStorage/OneDrive-TTCGlobal/Sales/Customer/Middle East/Dubai Islamic Bank (Oracle)/AI-INFO - DO NOT DELETE/worklog.md",
       "notes": "Dedicated Lead (apply dib) since 2026-06-01. Promoted from generic long-tail in the architecture-restructure sweep. DIB Oracle SOA OPCC->OC3 performance testing (RFQ 2026/0027). Commercial (Performetriks subcontract, T&C) stays in Agents/Contracts + KB Finance (Finance/Legal circle); pointer in worklog. No Restricted vault."
     },
     "enoc": {
       "display_name": "ENOC",
       "region": "Middle East",
-      "primary_folder": "{{ONEDRIVE_SHARED}}/Sales/Customer/Middle East/ENOC",
-      "ai_info_folder": "{{ONEDRIVE_SHARED}}/Sales/Customer/Middle East/ENOC/AI-INFO - DO NOT DELETE",
+      "primary_folder": "/Users/joergpietzsch/Library/CloudStorage/OneDrive-TTCGlobal/Sales/Customer/Middle East/ENOC",
+      "ai_info_folder": "/Users/joergpietzsch/Library/CloudStorage/OneDrive-TTCGlobal/Sales/Customer/Middle East/ENOC/AI-INFO - DO NOT DELETE",
       "created": "2026-04-20",
       "active_agents": [],
       "status": "active",
@@ -93,8 +93,8 @@
     "menabev": {
       "display_name": "MenaBev",
       "region": "Middle East",
-      "primary_folder": "{{ONEDRIVE_SHARED}}/Sales/Customer/Middle East/MenaBev",
-      "ai_info_folder": "{{ONEDRIVE_SHARED}}/Sales/Customer/Middle East/MenaBev/AI-INFO - DO NOT DELETE",
+      "primary_folder": "/Users/joergpietzsch/Library/CloudStorage/OneDrive-TTCGlobal/Sales/Customer/Middle East/MenaBev",
+      "ai_info_folder": "/Users/joergpietzsch/Library/CloudStorage/OneDrive-TTCGlobal/Sales/Customer/Middle East/MenaBev/AI-INFO - DO NOT DELETE",
       "created": "2026-04-20",
       "active_agents": [],
       "status": "active",
@@ -103,12 +103,12 @@
     "vkb": {
       "display_name": "VKB",
       "region": "South Africa",
-      "primary_folder": "{{ONEDRIVE_SHARED}}/Delivery/Leapwork/VKB",
-      "ai_info_folder": "{{ONEDRIVE_SHARED}}/Delivery/Leapwork/VKB/AI-INFO - DO NOT DELETE",
+      "primary_folder": "/Users/joergpietzsch/Library/CloudStorage/OneDrive-TTCGlobal/Delivery/Leapwork/VKB",
+      "ai_info_folder": "/Users/joergpietzsch/Library/CloudStorage/OneDrive-TTCGlobal/Delivery/Leapwork/VKB/AI-INFO - DO NOT DELETE",
       "lead": "dedicated",
       "lead_path": "Agents/Leads/vkb/",
       "restricted_ai_info": "",
-      "worklog": "{{ONEDRIVE_SHARED}}/Delivery/Leapwork/VKB/AI-INFO - DO NOT DELETE/worklog.md",
+      "worklog": "/Users/joergpietzsch/Library/CloudStorage/OneDrive-TTCGlobal/Delivery/Leapwork/VKB/AI-INFO - DO NOT DELETE/worklog.md",
       "created": "2026-04-20",
       "active_agents": [
         "taf",
@@ -121,8 +121,8 @@
     "dda": {
       "display_name": "DDA",
       "region": "Middle East",
-      "primary_folder": "{{ONEDRIVE_SHARED}}/Sales/Customer/Middle East/DDA",
-      "ai_info_folder": "{{ONEDRIVE_SHARED}}/Sales/Customer/Middle East/DDA/AI-INFO - DO NOT DELETE",
+      "primary_folder": "/Users/joergpietzsch/Library/CloudStorage/OneDrive-TTCGlobal/Sales/Customer/Middle East/DDA",
+      "ai_info_folder": "/Users/joergpietzsch/Library/CloudStorage/OneDrive-TTCGlobal/Sales/Customer/Middle East/DDA/AI-INFO - DO NOT DELETE",
       "created": "2026-04-22",
       "active_agents": [
         "tender"
@@ -133,12 +133,12 @@
     "qatar-energy": {
       "display_name": "Qatar Energy",
       "region": "Middle East",
-      "primary_folder": "{{ONEDRIVE_SHARED}}/Sales/Customer/Middle East/Qatar Energy",
-      "ai_info_folder": "{{ONEDRIVE_SHARED}}/Sales/Customer/Middle East/Qatar Energy/AI-INFO - DO NOT DELETE",
+      "primary_folder": "/Users/joergpietzsch/Library/CloudStorage/OneDrive-TTCGlobal/Sales/Customer/Middle East/Qatar Energy",
+      "ai_info_folder": "/Users/joergpietzsch/Library/CloudStorage/OneDrive-TTCGlobal/Sales/Customer/Middle East/Qatar Energy/AI-INFO - DO NOT DELETE",
       "lead": "dedicated",
       "lead_path": "Agents/Leads/qatar-energy/",
       "restricted_ai_info": "",
-      "worklog": "{{ONEDRIVE_SHARED}}/Sales/Customer/Middle East/Qatar Energy/AI-INFO - DO NOT DELETE/worklog.md",
+      "worklog": "/Users/joergpietzsch/Library/CloudStorage/OneDrive-TTCGlobal/Sales/Customer/Middle East/Qatar Energy/AI-INFO - DO NOT DELETE/worklog.md",
       "created": "2026-04-22",
       "active_agents": [
         "tender"
@@ -149,8 +149,8 @@
     "naivas": {
       "display_name": "Naivas",
       "region": "South Africa",
-      "primary_folder": "{{ONEDRIVE_SHARED}}/Delivery/Leapwork/Naivas",
-      "ai_info_folder": "{{ONEDRIVE_SHARED}}/Delivery/Leapwork/Naivas/AI-INFO - DO NOT DELETE",
+      "primary_folder": "/Users/joergpietzsch/Library/CloudStorage/OneDrive-TTCGlobal/Delivery/Leapwork/Naivas",
+      "ai_info_folder": "/Users/joergpietzsch/Library/CloudStorage/OneDrive-TTCGlobal/Delivery/Leapwork/Naivas/AI-INFO - DO NOT DELETE",
       "created": "2026-05-09",
       "active_agents": [
         "tender"
@@ -161,12 +161,12 @@
     "bwbm": {
       "display_name": "BwBm (Bundeswehr Bekleidungsmanagement)",
       "region": "DACH Region",
-      "primary_folder": "{{ONEDRIVE_SHARED}}/Delivery/2 DACH Region/BwBm",
-      "ai_info_folder": "{{ONEDRIVE_SHARED}}/Delivery/2 DACH Region/BwBm/AI-INFO - DO NOT DELETE",
+      "primary_folder": "/Users/joergpietzsch/Library/CloudStorage/OneDrive-TTCGlobal/Delivery/2 DACH Region/BwBm",
+      "ai_info_folder": "/Users/joergpietzsch/Library/CloudStorage/OneDrive-TTCGlobal/Delivery/2 DACH Region/BwBm/AI-INFO - DO NOT DELETE",
       "lead": "dedicated",
       "lead_path": "Agents/Leads/bwbm/",
-      "restricted_ai_info": "{{ONEDRIVE_SHARED}}/Admin/Finance_Legal/BwBm/AI-INFO-RESTRICTED",
-      "worklog": "{{ONEDRIVE_SHARED}}/Delivery/2 DACH Region/BwBm/AI-INFO - DO NOT DELETE/worklog.md",
+      "restricted_ai_info": "/Users/joergpietzsch/Library/CloudStorage/OneDrive-TTCGlobal/Admin/Finance_Legal/BwBm/AI-INFO-RESTRICTED",
+      "worklog": "/Users/joergpietzsch/Library/CloudStorage/OneDrive-TTCGlobal/Delivery/2 DACH Region/BwBm/AI-INFO - DO NOT DELETE/worklog.md",
       "created": "2026-05-31",
       "active_agents": [
         "sap",
@@ -177,6 +177,16 @@
       ],
       "status": "active",
       "notes": "Dedicated Lead pilot (architecture restructure). Team-tier in personal OneDrive Delivery (SharePoint library deferred to follow-on). Restricted vault per-folder shared with circle. Was previously internal domain-KB (Claude Folder/Knowledge Base/BwBm), not in registry."
+    },
+    "spar": {
+      "display_name": "SPAR",
+      "region": "DACH Region",
+      "primary_folder": "/Users/joergpietzsch/Library/CloudStorage/OneDrive-TTCGlobal/Delivery/2 DACH Region/SPAR",
+      "ai_info_folder": "/Users/joergpietzsch/Library/CloudStorage/OneDrive-TTCGlobal/Delivery/2 DACH Region/SPAR/AI-INFO - DO NOT DELETE",
+      "lead": "dedicated",
+      "lead_path": "Agents/Leads/spar/",
+      "worklog": "/Users/joergpietzsch/Library/CloudStorage/OneDrive-TTCGlobal/Delivery/2 DACH Region/SPAR/AI-INFO - DO NOT DELETE/worklog.md",
+      "_note": "PLATZHALTER — SPAR-Skelett 2026-06-16. AI-INFO-Ordner via kb_bootstrap_customer.sh anlegen; restricted_ai_info bei Bedarf ergänzen."
     }
   }
 }

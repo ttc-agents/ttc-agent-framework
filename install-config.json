@@ -296,6 +296,14 @@
       "apply": "dib",
       "submodules": false,
       "auto_install": true
+    },
+    {
+      "repo": "ttc-agent-lead-spar",
+      "dir": "Leads/spar",
+      "apply": "spar",
+      "submodules": false,
+      "auto_install": true,
+      "note": "SPAR Customer Lead (DACH, Deutsch). Klon des BwBm-Musters; dispatcht cap-sap/cap-test/TAF etc. Zugriff via GitHub-Team spar-team."
     }
   ],
   "_excluded_agents_note": {
