@@ -127,6 +127,72 @@ def resolve_customer(name_or_slug: str) -> tuple[str, dict]:
     raise KeyError(f"Customer not found in registry: {name_or_slug}")
 
 
+def iter_worklog_targets(registry: dict) -> list:
+    """Return [(slug, entry, worklog_path)] for non-archived customers with a resolvable
+    Team-tier worklog.md. NEVER resolves restricted_ai_info. Skips missing files."""
+    targets = []
+    for slug, entry in registry.get("customers", {}).items():
+        if entry.get("status", "active") == "archived":
+            continue
+        wl = entry.get("worklog")
+        if wl:
+            wl_path = Path(wl)
+        elif entry.get("ai_info_folder"):
+            wl_path = Path(entry["ai_info_folder"]) / "worklog.md"
+        else:
+            continue
+        if wl_path.is_file():
+            targets.append((slug, entry, wl_path))
+    return targets
+
+
+def vectorize_worklogs(registry: dict, collection, model, vector_index: dict, force: bool = False):
+    """Delta-vectorize each registered customer's Team-tier worklog.md into the collection.
+    Reuses file_checksum + chunk_text. Returns (vectorized, skipped, total_chunks)."""
+    targets = iter_worklog_targets(registry)
+    print(f"Found {len(targets)} customer worklog(s) to consider")
+    vectorized = skipped = total_chunks = 0
+    for slug, entry, wl_path in targets:
+        src_key = str(wl_path)
+        checksum = file_checksum(wl_path)
+        if not force and vector_index.get(src_key, {}).get("checksum") == checksum:
+            skipped += 1
+            continue
+        text = wl_path.read_text(encoding="utf-8", errors="replace")
+        chunks = chunk_text(text)
+        if not chunks:
+            vector_index[src_key] = {"checksum": checksum, "chunks": 0,
+                                     "vectorized_at": datetime.now().isoformat()}
+            skipped += 1
+            continue
+        metadata = {
+            "customer": entry.get("display_name", slug),
+            "customer_slug": slug,
+            "region": entry.get("region", "Unknown"),
+            "filename": f"{slug}/worklog.md",
+            "source_path": src_key,
+            "doc_type": "worklog",
+        }
+        old_ids = [f"{src_key}::chunk_{j}" for j in range(1000)]
+        try:
+            collection.delete(ids=old_ids)
+        except Exception:
+            pass
+        embeddings = model.encode(chunks, show_progress_bar=False).tolist()
+        ids = [f"{src_key}::chunk_{j}" for j in range(len(chunks))]
+        metadatas = [{**metadata, "chunk_index": j, "total_chunks": len(chunks)} for j in range(len(chunks))]
+        collection.upsert(ids=ids, embeddings=embeddings, documents=chunks, metadatas=metadatas)
+        total_chunks += len(chunks)
+        vectorized += 1
+        vector_index[src_key] = {
+            "checksum": checksum,
+            "chunks": len(chunks),
+            "vectorized_at": datetime.now().isoformat(),
+        }
+        print(f"  VECTORIZED {slug}/worklog.md ({len(chunks)} chunks)")
+    return vectorized, skipped, total_chunks
+
+
 # ── Main logic ────────────────────────────────────────────────────────────────
 
 def main():
@@ -135,7 +201,12 @@ def main():
     parser.add_argument("--source", type=Path, default=None, help="Override source folder.")
     parser.add_argument("--customer", type=str, default=None,
                         help="Customer name or slug — vectorize just that customer's AI-INFO/converted folder.")
+    parser.add_argument("--worklogs", action="store_true",
+                        help="Vectorize each registered customer's Team-tier worklog.md (delta).")
     args = parser.parse_args()
+
+    if args.worklogs and (args.customer or args.source):
+        parser.error("--worklogs cannot be combined with --customer or --source")
 
     metadata_override = None
     if args.customer:
@@ -161,7 +232,7 @@ def main():
     print(f"Initializing ChromaDB at {VECTOR_DB_PATH}")
     client = chromadb.PersistentClient(path=str(VECTOR_DB_PATH))
 
-    if args.force:
+    if args.force and not args.worklogs:
         # Delete and recreate collection on force
         try:
             client.delete_collection(COLLECTION_NAME)
@@ -178,6 +249,18 @@ def main():
     # Load embedding model
     print(f"Loading embedding model: {EMBEDDING_MODEL}")
     model = SentenceTransformer(EMBEDDING_MODEL)
+
+    if args.worklogs:
+        registry = load_registry()
+        v, s, c = vectorize_worklogs(registry, collection, model, vector_index, force=args.force)
+        save_vector_index(vector_index)
+        print(f"\n── Worklog summary ───────────────────────")
+        print(f"  Vectorized : {v} worklog(s) ({c} chunks)")
+        print(f"  Skipped    : {s} (unchanged)")
+        print(f"  Collection : {collection.count()} total chunks in DB")
+        print("\n⚠ kb_search reads the ttc-kb VM, not this local store.")
+        print("  Run: Agents/Infrastructure/kb-remote/sync-to-vm.sh   to push + restart the VM.")
+        return
 
     # Discover all .txt files (skip index files, vector DBs, and AI-INFO notes/memory/README at top level)
     skip_names = {"_index.json", "_vector_index.json", "notes.md", "memory.md", "README.md"}
