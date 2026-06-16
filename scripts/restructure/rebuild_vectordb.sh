@@ -10,8 +10,8 @@
 # Usage:  rebuild_vectordb.sh --confirm
 #   (without --confirm it prints the plan and exits — this op deletes + rebuilds ~30k chunks)
 #
-# After running: the kb_search MCP server caches the collection handle → run `/mcp` reconnect
-# knowledge-base (or restart Claude Code) once, before kb_search works again.
+# After running: kb_search reads the ttc-kb VM (not this local store) → run
+# Agents/Infrastructure/kb-remote/sync-to-vm.sh to publish + restart the VM kb container.
 set -euo pipefail
 VAULT="{{AI_VAULT}}"
 KB_PY="$VAULT/.venv-kb/bin/python3"
@@ -24,6 +24,7 @@ echo "== rebuild_vectordb =="
 echo "Step 1: kb_vectorize.py --force   (general KB rebuild, drops + recreates collection)"
 echo "Step 2: kb_vectorize.py --customer <name>   for each registered customer:"
 mapfile_customers | sed 's/^/   - /'
+echo "Step 3: kb_vectorize.py --worklogs   (re-add Team-tier worklogs — else a rebuild loses them)"
 echo
 
 if [[ "${1:-}" != "--confirm" ]]; then
@@ -31,11 +32,11 @@ if [[ "${1:-}" != "--confirm" ]]; then
   exit 0
 fi
 
-echo "-- Step 1/2: force-rebuild general KB --"
+echo "-- Step 1/3: force-rebuild general KB --"
 "$KB_PY" "$VECTORIZER" --force
 
 echo
-echo "-- Step 2/2: re-vectorize each customer (delta, NEVER --force) --"
+echo "-- Step 2/3: re-vectorize each customer (delta, NEVER --force) --"
 while IFS= read -r name; do
   [[ -z "$name" ]] && continue
   echo ">> $name"
@@ -43,4 +44,8 @@ while IFS= read -r name; do
 done < <(mapfile_customers)
 
 echo
-echo "== DONE. ⚠ Run '/mcp reconnect knowledge-base' (or restart Claude Code) before using kb_search. =="
+echo "-- Step 3/3: re-vectorize worklogs (delta) --"
+"$KB_PY" "$VECTORIZER" --worklogs
+
+echo
+echo "== DONE. ⚠ kb_search reads the ttc-kb VM — run Agents/Infrastructure/kb-remote/sync-to-vm.sh to publish. =="
