@@ -225,14 +225,6 @@
     },
     {
       "repo": null,
-      "dir": "OpenDesk",
-      "apply": "opendesk",
-      "submodules": false,
-      "auto_install": false,
-      "note": "Local-only agent (no GitHub repo). Joerg's OpenDesk/Nextcloud integration helper. Not distributed — no source control, must be kept manually in sync across machines."
-    },
-    {
-      "repo": null,
       "dir": "AutoLead",
       "apply": "autolead",
       "submodules": false,
