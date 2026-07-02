@@ -42,7 +42,9 @@ SCHEDULED_TASKS = [
     },
     {
         "name": "hr-cv-check",
-        "times": [(0, 0), (12, 0)],
+        # PAUSED 2026-06-30 (Joerg): Egypt CV checks + summary/rejection emails
+        # stopped "for now". To resume, restore: "times": [(0, 0), (12, 0)].
+        "times": [],
         "script": str(BASE_DIR / "Agents/HR/egypt_cv_check_automation.py"),
         "args": [],
         "python": VENV_PYTHON,
@@ -71,6 +73,20 @@ SCHEDULED_TASKS = [
         "log": str(BASE_DIR / "Claude Folder/conversion-finance.log"),
     },
     {
+        # Closes the convert→vectorize→VM drift gap. kb-sales (02:00) + kb-finance
+        # (02:15) only convert source→.txt; this fires AFTER them and runs the wrapper
+        # that delta-vectorizes (KB + worklogs) and pushes to the ttc-kb VM that
+        # kb_search actually reads. /bin/bash because the wrapper is a shell script.
+        "name": "kb-vectorize-sync",
+        "times": [(2, 45)],
+        "script": str(
+            BASE_DIR / "Agents/Infrastructure/kb-remote/nightly-vectorize-sync.sh"
+        ),
+        "args": [],
+        "python": "/bin/bash",
+        "log": str(BASE_DIR / "Claude Folder/nightly-vectorize-sync.log"),
+    },
+    {
         "name": "sync-knowledge",
         "times": [(23, 30)],
         "script": str(BASE_DIR / "Agents/sync_personal_knowledge.py"),
@@ -81,8 +97,9 @@ SCHEDULED_TASKS = [
     {
         # Findability cross-index: aggregate every customer worklog.md (OneDrive
         # Delivery + Sales) into the Personal worklog-index. Static .md write only —
-        # no kb_search/MCP impact. Semantic refresh (kb_vectorize --worklogs) stays
-        # manual to avoid invalidating a live kb_search handle mid-session.
+        # no kb_search/MCP impact. (Semantic refresh — kb_vectorize --worklogs — now
+        # runs nightly at 02:45 via the kb-vectorize-sync task; the VM container
+        # restart there drops the cached kb_search handle, so no mid-session hazard.)
         "name": "worklog-index",
         "times": [(23, 35)],
         "script": str(BASE_DIR / "scripts/restructure/build_worklog_index.py"),
