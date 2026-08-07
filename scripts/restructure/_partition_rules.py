@@ -2,12 +2,28 @@
 """Shared partition/leak heuristics (DRY: inventory + curator import these)."""
 import re
 
+# Umlaut-Varianten: im Vault kommen beide Schreibweisen vor (ä und ae), weil
+# Dateien aus unterschiedlichen Quellen und Konvertierungen stammen. Ohne beide
+# Formen wird "Vergütung" erkannt und "Verguetung" nicht. (2026-08-07)
+_A = "(?:ä|ae|a)"
+_O = "(?:ö|oe|o)"
+_U = "(?:ü|ue|u)"
+
 _SENSITIVE = [
     re.compile(r"\b(rate|day ?rate|daily rate|price|pricing|cost)\b", re.I),
     re.compile(r"\b(salary|salaries|lohn|löhne|compensation|comp band)\b", re.I),
     re.compile(r"\b(EUR|USD|AED|GBP|CHF|€|\$)\s?\d", re.I),
     re.compile(r"\b\d{2,3}k\b", re.I),
     re.compile(r"\b(contract value|profit ?share|margin)\b", re.I),
+    # ── Deutsche Commercials, ergaenzt 2026-08-07 (Joerg) ──────────────────
+    # Bis dahin griffen NUR englische Begriffe. "Der Tagessatz betraegt 1450
+    # pro Consultant" rutschte ohne Waehrungsangabe als unbedenklich durch,
+    # obwohl im Vault viel deutschsprachiges Material liegt (SPAR, BwBm).
+    # Erstmals aufgefallen beim Bau des Hermes-Eskalations-Gates.
+    re.compile(rf"\b(tagess{_A}tze?|stundens{_A}tze?|honorar|verg{_U}tung)\b", re.I),
+    re.compile(rf"\b(geh{_A}lt|geh{_A}lter|bezahlung|l{_O}hne)\b", re.I),
+    re.compile(r"\b(auftragswert|vertragswert|marge|deckungsbeitrag)\b", re.I),
+    re.compile(r"\b(preisliste|kalkulation|angebotspreis|nachlass|rabatt)\b", re.I),
 ]
 
 def mentions_customer(text, names):
