@@ -102,6 +102,8 @@ MODEL_MAP: dict[str, str] = {
     "qatar-energy":   "Opus 4.6",
     "dib":            "Opus 4.6",
     "customer":       "Opus 4.6",
+    "spar":           "Opus 4.6",   # fehlte -> fiel auf den Sonnet-Default zurueck (2026-08-12)
+    "pdo":            "Opus 4.6",
     # Haiku 4.5
     "trading":        "Haiku 4.5",
     "trading-hf":     "Haiku 4.5",
@@ -120,6 +122,8 @@ MODEL_MAP: dict[str, str] = {
     "trading-ibkr":   "Sonnet 4.6",
     "docs":           "Sonnet 4.6",
     "curator":        "Sonnet 4.6",
+    "ib":             "Sonnet 4.6",
+    "oracle":         "Sonnet 4.6",
 }
 
 # ---------------------------------------------------------------------------
@@ -131,10 +135,10 @@ MODEL_MAP: dict[str, str] = {
 DISPLAY_ORDER: list[str] = [
     "tender", "finance", "contracts", "personal", "hr",
     "bwbm", "test", "private", "sales-admin", "sales",
-    "odoo", "infra", "opendesk", "taf", "autolead", "appdev",
+    "odoo", "infra", "opendesk", "taf", "autolead", "appdev", "ib",
     "trading", "trading-hf", "trading-ibkr", "control-review",
-    "sap", "docs", "tom", "customer",
-    "vkb", "dubai-holding", "cbuae", "qatar-energy", "dib",
+    "sap", "oracle", "docs", "tom", "customer",
+    "vkb", "dubai-holding", "cbuae", "qatar-energy", "pdo", "dib", "spar",
     "curator",
 ]
 
