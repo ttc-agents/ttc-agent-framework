@@ -48,7 +48,7 @@
       "repo": "ttc-brand-standards",
       "path": "brand",
       "auto_install": true,
-      "note": "TTC standards memos (Excel workbook standard, Claude Design brief spec). Logos/imagery NOT here — read from OneDrive via Agents/Docs/brand_paths.py."
+      "note": "TTC standards memos (Excel workbook standard, Claude Design brief spec). Logos/imagery NOT here \u2014 read from OneDrive via Agents/Docs/brand_paths.py."
     },
     {
       "repo": "ttc-mcp-proton-server",
@@ -70,14 +70,6 @@
       "apply": "sap",
       "submodules": true,
       "auto_install": true
-    },
-    {
-      "repo": null,
-      "dir": "Oracle",
-      "apply": "oracle",
-      "submodules": false,
-      "auto_install": false,
-      "note": "Oracle Engineering & Testability. Verteilt ueber das Plugin ttc-capabilities (kein eigenes Repo, Stand 2026-08-12)."
     },
     {
       "repo": "ttc-agent-test",
@@ -256,14 +248,6 @@
       "note": "PRIVATE/non-TTC. Local git repo, no GitHub remote. CardBenefits UAE app orchestrator (5 stack-aligned subagents). Deliberately excluded from ttc-agents distribution. Detail: Agents/Infrastructure/memory/appdev-agent.md"
     },
     {
-      "repo": null,
-      "dir": "AppDev-IB",
-      "apply": "ib",
-      "submodules": false,
-      "auto_install": false,
-      "note": "PRIVATE/non-TTC. IB Learning App orchestrator (research-then-build). Lokales git-Repo, kein GitHub-Remote. Bewusst nicht in der ttc-agents-Distribution."
-    },
-    {
       "repo": "ttc-agent-lead-bwbm",
       "dir": "Leads/bwbm",
       "apply": "bwbm",
@@ -297,14 +281,6 @@
       "apply": "qatar-energy",
       "submodules": false,
       "auto_install": true
-    },
-    {
-      "repo": null,
-      "dir": "Leads/pdo",
-      "apply": "pdo",
-      "submodules": false,
-      "auto_install": false,
-      "note": "PDO (Petroleum Development Oman) Customer Lead. Verteilt ueber das Plugin ttc-customer-leads (kein eigenes Repo, Stand 2026-08-12)."
     },
     {
       "repo": "ttc-agent-lead-dib",
