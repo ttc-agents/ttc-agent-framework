@@ -181,34 +181,6 @@
       "auto_install": true
     },
     {
-      "repo": "ttc-agent-trading",
-      "dir": "Trading",
-      "apply": "trading",
-      "submodules": false,
-      "auto_install": true
-    },
-    {
-      "repo": "ttc-agent-trading-hf",
-      "dir": "Trading-HF",
-      "apply": "trading-hf",
-      "submodules": false,
-      "auto_install": true
-    },
-    {
-      "repo": "ttc-agent-trading-ibkr",
-      "dir": "Trading-IBKR",
-      "apply": "trading-ibkr",
-      "submodules": false,
-      "auto_install": true
-    },
-    {
-      "repo": "ttc-agent-control-review",
-      "dir": "Control-Review",
-      "apply": "control-review",
-      "submodules": false,
-      "auto_install": true
-    },
-    {
       "repo": "ttc-agent-curator",
       "dir": "Curator",
       "apply": "curator",
