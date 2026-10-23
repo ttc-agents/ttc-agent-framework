@@ -11,29 +11,39 @@ Scope: cap-sap, cap-qa-tom, cap-tender, cap-contracts, cap-docs (all 5 customer-
 Test/TAF dispatch is already covered by AutoLead's test-designer/taf-author/taf-healer/triage.
 
 Outputs:
-  - canonical defs  -> Agents/Leads/_dispatch/subagents/<name>.md   (committed, source of truth)
-  - installed defs  -> ~/.claude/agents/<name>.md                   (what Claude Code dispatches)
+  - canonical defs  -> Agents/Leads/_dispatch/subagents/<name>.md        (committed, source of truth)
+  - shipped defs    -> <marketplace>/ttc-capabilities/agents/<name>.md   (what Claude Code dispatches)
+
+The defs are rendered with `~/AI-Vault/...` paths (same convention as the marketplace's
+gen-personas.py), never the owner's home prefix, and tell the sub-agent to fall back to the persona
+the ttc-core plugin ships when the vault file does not exist (colleague machines have no archived
+capability dirs). Since 2026-10-23 nothing is installed to ~/.claude/agents/ any more: the plugin
+ships the defs, and a local copy would only list every cap-* twice.
 
 Usage:
-    python3 build-capability-subagents.py            # generate + install
-    python3 build-capability-subagents.py --check    # verify installed == generated (drift check); exit 1 on drift
+    python3 build-capability-subagents.py                       # generate canonical + shipped
+    python3 build-capability-subagents.py --marketplace <dir>   # other marketplace checkout
+    python3 build-capability-subagents.py --check               # drift check; exit 1 on drift
 """
 import os
 import sys
 import difflib
 
-HOME = os.path.expanduser("~")
-VAULT = "{{AI_VAULT}}"
-SUBAGENT_SRC = os.path.join(VAULT, "Agents/Leads/_dispatch/subagents")
-INSTALL_DIR = os.path.join(HOME, ".claude/agents")
+VAULT_FS = os.environ.get("TTC_AI_VAULT", os.path.expanduser("~/AI-Vault"))
+SUBAGENT_SRC = os.path.join(VAULT_FS, "Agents/Leads/_dispatch/subagents")
+MARKETPLACE = os.path.join(VAULT_FS, "ttc-agents-marketplace")
 
-# Authoritative persona sources (READ at runtime by the sub-agent, never copied here).
+# Authoritative persona sources (READ at runtime by the sub-agent, never copied here). Rendered
+# with "~" so no owner-specific home path ever ships.
+VAULT = "~/AI-Vault"
 SAP_PROMPT = f"{VAULT}/Agents/SAP/system-prompt.md"
 QA_TOM_PROMPT = f"{VAULT}/Agents/QA_TOM_Generator/system-prompt.md"
 TENDER_PROMPT = f"{VAULT}/Agents/Tender/system-prompt.md"
 CONTRACTS_PROMPT = f"{VAULT}/Agents/Contracts/system-prompt.md"
 DOCS_PROMPT = f"{VAULT}/Agents/Docs/system-prompt.md"
 PARTITION_LAW = f"{VAULT}/Agents/Leads/_partition-law.md"
+PLUGIN_PERSONA = "~/.claude/plugins/cache/ttc-agents/ttc-core/*/personas/{persona}.md"
+PLUGIN_LAW = "~/.claude/plugins/cache/ttc-agents/ttc-core/*/partition-law.md"
 
 DISPATCH_CONTRACT = """\
 ## Dispatch contract (all capability sub-agents)
@@ -53,6 +63,7 @@ DISPATCH_CONTRACT = """\
 
 SUBAGENTS = {
     "cap-sap": {
+        "persona": "sap",
         "description": ("Dispatchable SAP capability — S/4HANA architecture, BPH/scope analysis, "
                         "effort/ROI estimation inputs, SAP testing guidance. Dispatch from a Customer "
                         "Lead (or for customer-free technical work) for a focused SAP task; you get a "
@@ -69,6 +80,7 @@ points you to. Produce the requested artefact (analysis, estimate, recommendatio
 do not sprawl beyond the task or re-open settled scope.""",
     },
     "cap-qa-tom": {
+        "persona": "tom",
         "description": ("Dispatchable QA-TOM capability — consulting-grade QA Target Operating Models, "
                         "maturity/standards artefacts, ROI/business-case modelling, Phase-Zero "
                         "deliverables. Dispatch from a Customer Lead for a focused TOM/BC task; you get "
@@ -85,6 +97,7 @@ for the customer's existing context. Return the artefact + a concise summary; th
 owns integration and the customer-side worklog (incl. any commercial figures, which stay Lead-local).""",
     },
     "cap-tender": {
+        "persona": "tender",
         "description": ("Dispatchable Tender capability — RFP/RFQ responses, proposals, qualification "
                         "statements, win themes, technical/commercial bid sections. Dispatch from a "
                         "Customer Lead for a focused proposal task; you get a customer slice, return "
@@ -100,6 +113,7 @@ Use `kb_search` for the customer's existing context and TTC win material. Return
 summary; the dispatching Lead owns where it ships (its `working/` until Joerg says "ship it").""",
     },
     "cap-contracts": {
+        "persona": "contracts",
         "description": ("Dispatchable Contracts capability — contract/NDA/SOW/MSA review, clause "
                         "analysis, redlines, risk flags, fallback positions. Dispatch from a Customer "
                         "Lead for a focused legal-review task; you get a customer slice, return the "
@@ -115,6 +129,7 @@ prior TTC positions. Return the analysis/redline + a concise risk summary. Execu
 docs belong in the Finance/Legal-circle stores — never in capability memory.""",
     },
     "cap-docs": {
+        "persona": "docs",
         "description": ("Dispatchable Docs capability — TTC-branded PPTX/Word/Excel generation from a "
                         "brief or content. Dispatch from a Customer Lead for a focused document/deck "
                         "task; you get a customer slice + content, return the generated artefact, and "
@@ -138,6 +153,7 @@ GEN_HEADER = ("<!-- GENERATED by Agents/Leads/_dispatch/build-capability-subagen
 
 def render(name, spec):
     read_list = "\n".join(f"- `{p}`" for p in spec["read_at_start"])
+    fallback = PLUGIN_PERSONA.format(persona=spec["persona"])
     parts = [
         "---",
         f"name: {name}",
@@ -153,6 +169,10 @@ def render(name, spec):
         "## Read these at the start (authoritative source — not duplicated here)",
         read_list,
         "",
+        f"If the persona file does not exist (no synced vault), read the copy the plugin ships instead:",
+        f"Glob `{fallback}` and take the highest version. If the partition-law file is missing too,",
+        f"read `{PLUGIN_LAW}` (highest version).",
+        "",
         spec["role"],
         "",
         DISPATCH_CONTRACT,
@@ -162,23 +182,28 @@ def render(name, spec):
 
 def main(argv):
     generated = {name: render(name, spec) for name, spec in SUBAGENTS.items()}
+    marketplace = argv[argv.index("--marketplace") + 1] if "--marketplace" in argv else MARKETPLACE
+    shipped_dir = os.path.join(os.path.expanduser(marketplace), "ttc-capabilities", "agents")
+    targets = (("canonical", SUBAGENT_SRC), ("shipped", shipped_dir))
     if "--check" in argv:
         drift = False
         for name, text in generated.items():
-            for label, d in (("canonical", SUBAGENT_SRC), ("installed", INSTALL_DIR)):
+            for label, d in targets:
                 p = os.path.join(d, f"{name}.md")
                 if not os.path.exists(p) or open(p, encoding="utf-8").read() != text:
                     print(f"DRIFT: {label} {name}.md differs from generator output")
                     drift = True
         print("DRIFT detected — re-run without --check." if drift else "OK — no drift.")
         sys.exit(1 if drift else 0)
-    os.makedirs(SUBAGENT_SRC, exist_ok=True)
-    os.makedirs(INSTALL_DIR, exist_ok=True)
-    for name, text in generated.items():
-        for d in (SUBAGENT_SRC, INSTALL_DIR):
+    for label, d in targets:
+        if label == "shipped" and not os.path.isdir(d):
+            print(f"skip shipped: no marketplace checkout at {d}")
+            continue
+        os.makedirs(d, exist_ok=True)
+        for name, text in generated.items():
             with open(os.path.join(d, f"{name}.md"), "w", encoding="utf-8") as fh:
                 fh.write(text)
-        print(f"generated + installed: {name}")
+        print(f"generated {label}: {', '.join(generated)}")
 
 
 if __name__ == "__main__":
