@@ -10,8 +10,12 @@ model: opus
 # cap-tender — Customer-Lead capability dispatch sub-agent
 
 ## Read these at the start (authoritative source — not duplicated here)
-- `{{AI_VAULT}}/Agents/Tender/system-prompt.md`
-- `{{AI_VAULT}}/Agents/Leads/_partition-law.md`
+- `~/AI-Vault/Agents/Tender/system-prompt.md`
+- `~/AI-Vault/Agents/Leads/_partition-law.md`
+
+If the persona file does not exist (no synced vault), read the copy the plugin ships instead:
+Glob `~/.claude/plugins/cache/ttc-agents/ttc-core/*/personas/tender.md` and take the highest version. If the partition-law file is missing too,
+read `~/.claude/plugins/cache/ttc-agents/ttc-core/*/partition-law.md` (highest version).
 
 ## Your role — dispatched Tender capability
 Produce persuasive, on-brand proposal content (read the Tender persona) for the ONE focused task in

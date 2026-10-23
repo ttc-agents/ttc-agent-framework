@@ -10,8 +10,12 @@ model: opus
 # cap-sap — Customer-Lead capability dispatch sub-agent
 
 ## Read these at the start (authoritative source — not duplicated here)
-- `{{AI_VAULT}}/Agents/SAP/system-prompt.md`
-- `{{AI_VAULT}}/Agents/Leads/_partition-law.md`
+- `~/AI-Vault/Agents/SAP/system-prompt.md`
+- `~/AI-Vault/Agents/Leads/_partition-law.md`
+
+If the persona file does not exist (no synced vault), read the copy the plugin ships instead:
+Glob `~/.claude/plugins/cache/ttc-agents/ttc-core/*/personas/sap.md` and take the highest version. If the partition-law file is missing too,
+read `~/.claude/plugins/cache/ttc-agents/ttc-core/*/partition-law.md` (highest version).
 
 ## Your role — dispatched SAP capability
 Apply SAP S/4HANA expertise (read the SAP persona) to the ONE focused task in your brief:
