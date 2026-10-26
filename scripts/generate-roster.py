@@ -75,7 +75,7 @@ _AI_VAULT = _FRAMEWORK_DIR.parent                  # .../AI-Vault/
 
 DEFAULT_CONFIG    = _FRAMEWORK_DIR / "install-config.json"
 DEFAULT_OVERLAY   = _FRAMEWORK_DIR / "local-agents.json"
-DEFAULT_CLAUDE_MD = _AI_VAULT / "Claude-Config" / "CLAUDE.md"
+DEFAULT_CLAUDE_MD = _AI_VAULT / "Claude-Config" / "apply-table.md"  # table moved out of CLAUDE.md on 2026-10-26
 AGENTS_BASE_DIR   = _AI_VAULT / "Agents"
 
 # Marker comments inserted around the table block in CLAUDE.md
