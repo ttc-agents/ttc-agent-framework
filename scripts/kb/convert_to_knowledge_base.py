@@ -32,8 +32,8 @@ VENV_PYTHON = Path("{{AI_VAULT}}/.venv/bin/python3")
 SUPPORTED_EXTENSIONS = {".docx", ".pptx", ".pdf"}
 
 # Directory names to skip anywhere in the tree
-EXCLUDE_DIR_NAMES = {"AI-INFO - DO NOT DELETE", ".venv", "_vectordb", "__pycache__", ".git"}
-
+# "Drafts" holds unpromoted working versions: never index them (Joerg, 2026-11-05, Qatar Energy EPT SoW v8 leak).
+EXCLUDE_DIR_NAMES = {"AI-INFO - DO NOT DELETE", ".venv", "_vectordb", "__pycache__", ".git", "Drafts"}
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
 def load_index(index_path: Path = INDEX_FILE) -> dict:
