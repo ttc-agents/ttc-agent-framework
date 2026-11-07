@@ -240,35 +240,40 @@
       "dir": "Leads/bwbm",
       "apply": "bwbm",
       "submodules": false,
-      "auto_install": true
+      "auto_install": false,
+      "note": "ARCHIVED 2026-06-16: Repo eingefroren (Stand Juni), Lead-Persona kommt aus dem Plugin ttc-customer-leads, aktuelle Memory nur auf dem Mac mini (Backup ttc-vault-backup). Nicht klonen."
     },
     {
       "repo": "ttc-agent-lead-vkb",
       "dir": "Leads/vkb",
       "apply": "vkb",
       "submodules": false,
-      "auto_install": true
+      "auto_install": false,
+      "note": "ARCHIVED 2026-06-16: Repo eingefroren (Stand Juni), Lead-Persona kommt aus dem Plugin ttc-customer-leads, aktuelle Memory nur auf dem Mac mini (Backup ttc-vault-backup). Nicht klonen."
     },
     {
       "repo": "ttc-agent-lead-dubai-holding",
       "dir": "Leads/dubai-holding",
       "apply": "dubai-holding",
       "submodules": false,
-      "auto_install": true
+      "auto_install": false,
+      "note": "ARCHIVED 2026-06-16: Repo eingefroren (Stand Juni), Lead-Persona kommt aus dem Plugin ttc-customer-leads, aktuelle Memory nur auf dem Mac mini (Backup ttc-vault-backup). Nicht klonen."
     },
     {
       "repo": "ttc-agent-lead-cbuae",
       "dir": "Leads/cbuae",
       "apply": "cbuae",
       "submodules": false,
-      "auto_install": true
+      "auto_install": false,
+      "note": "ARCHIVED 2026-06-16: Repo eingefroren (Stand Juni), Lead-Persona kommt aus dem Plugin ttc-customer-leads, aktuelle Memory nur auf dem Mac mini (Backup ttc-vault-backup). Nicht klonen."
     },
     {
       "repo": "ttc-agent-lead-qatar-energy",
       "dir": "Leads/qatar-energy",
       "apply": "qatar-energy",
       "submodules": false,
-      "auto_install": true
+      "auto_install": false,
+      "note": "ARCHIVED 2026-06-16: Repo eingefroren (Stand Juni), Lead-Persona kommt aus dem Plugin ttc-customer-leads, aktuelle Memory nur auf dem Mac mini (Backup ttc-vault-backup). Nicht klonen."
     },
     {
       "repo": null,
@@ -283,15 +288,16 @@
       "dir": "Leads/dib",
       "apply": "dib",
       "submodules": false,
-      "auto_install": true
+      "auto_install": false,
+      "note": "ARCHIVED 2026-06-16: Repo eingefroren (Stand Juni), Lead-Persona kommt aus dem Plugin ttc-customer-leads, aktuelle Memory nur auf dem Mac mini (Backup ttc-vault-backup). Nicht klonen."
     },
     {
       "repo": "ttc-agent-lead-spar",
       "dir": "Leads/spar",
       "apply": "spar",
       "submodules": false,
-      "auto_install": true,
-      "note": "SPAR Customer Lead (DACH, Deutsch). Klon des BwBm-Musters; dispatcht cap-sap/cap-test/TAF etc. Zugriff via GitHub-Team spar-team."
+      "auto_install": false,
+      "note": "ARCHIVED 2026-06-16: Repo eingefroren (Stand Juni), Lead-Persona kommt aus dem Plugin ttc-customer-leads, aktuelle Memory nur auf dem Mac mini (Backup ttc-vault-backup). Nicht klonen. SPAR Customer Lead (DACH, Deutsch). Klon des BwBm-Musters; dispatcht cap-sap/cap-test/TAF etc. Zugriff via GitHub-Team spar-team."
     }
   ],
   "_excluded_agents_note": {

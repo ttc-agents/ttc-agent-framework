@@ -176,6 +176,9 @@ if [[ -d "$AGENTS_DIR" ]]; then
     for agent in "$AGENTS_DIR"/*/; do
         pull_repo "${agent%/}"
     done
+    # Agents/Leads/<slug> is skipped on purpose: the per-client Lead repos were
+    # ARCHIVED 2026-06-16 (frozen at June state, auto_install=false in
+    # install-config.json). Personas ship via the ttc-customer-leads plugin.
 fi
 
 # 3. Other repos under AI-Vault root (Claude-Config, brand, Tools/mcp-proton)
