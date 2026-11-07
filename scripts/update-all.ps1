@@ -133,6 +133,16 @@ if (Test-Path $AgentsDir) {
     Get-ChildItem -Path $AgentsDir -Directory | ForEach-Object {
         Update-Repo -Dir $_.FullName
     }
+    # Customer Leads live one level deeper (Agents/Leads/<slug>, each its own
+    # repo); Agents/Leads itself is not a repo, so the loop above skipped them.
+    $LeadsDir = Join-Path $AgentsDir "Leads"
+    if (Test-Path $LeadsDir) {
+        Get-ChildItem -Path $LeadsDir -Directory | ForEach-Object {
+            Update-Repo -Dir $_.FullName
+        }
+        $PartitionLaw = Join-Path $FrameworkDir "leads\_partition-law.md"
+        if (Test-Path $PartitionLaw) { Copy-Item -Path $PartitionLaw -Destination $LeadsDir -Force }
+    }
 }
 
 # 3. Shared repos (Claude-Config, brand, Tools/mcp-proton)
@@ -185,7 +195,7 @@ if (Test-Path $Materialiser) {
     $env:TTC_AI_VAULT = $InstallRoot
     $env:TTC_HOME     = $env:USERPROFILE
     if (Test-Path $AgentsDir) {
-        Get-ChildItem -Path $AgentsDir -Directory | ForEach-Object {
+        @(Get-ChildItem -Path $AgentsDir -Directory) + @(Get-ChildItem -Path (Join-Path $AgentsDir "Leads") -Directory -ErrorAction SilentlyContinue) | ForEach-Object {
             if (Test-Path (Join-Path $_.FullName ".git")) {
                 try { & $Materialiser -Path $_.FullName | Out-Null } catch { Write-WarnMsg "  materialise failed for $($_.Name): $_" }
             }
