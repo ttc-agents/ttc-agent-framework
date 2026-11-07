@@ -113,6 +113,14 @@ function Invoke-MaterialiseFile {
 
     if ($content -notmatch '\{\{(AI_VAULT|HOME|ONEDRIVE_SHARED)\}\}') { return }
 
+    # Honour the SANITISE-SKIP opt-out (symmetric with materialise-paths.sh and
+    # sanitise-paths.ps1): files that document or implement the substitution keep
+    # their literal placeholders. Without this, update-all re-materialised the
+    # framework repo and rewrote this script's own Replace() patterns, after which
+    # no placeholder anywhere was substituted any more (Alice's PC, 2026-11-07).
+    $head = (($content -split "`n") | Select-Object -First 50) -join "`n"
+    if ($head -match '#\s*SANITISE-SKIP') { return }
+
     # Order: {{ONEDRIVE_SHARED}}/ FIRST (its substitution already contains a fully-
     # resolved $HOME, so no inner placeholder to re-expand).
     # Single line, no backtick continuation: a backtick followed by CRLF (git
