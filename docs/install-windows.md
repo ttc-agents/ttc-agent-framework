@@ -87,7 +87,6 @@ Idempotent. Existing clones are pulled, existing tools are skipped, existing rou
 
 Not included on Windows (Mac-only features):
 - Dispatcher LaunchAgent → would need Task Scheduler
-- AgentLauncher tray app → SwiftUI, Mac-only
 - Syncthing conflict monitor → script runs, but scheduling needs Task Scheduler
 - Trading agents → personal-only, not shipped
 

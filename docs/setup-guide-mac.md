@@ -85,18 +85,7 @@ If you have multiple machines sharing the same config:
 ln -sf ~/AI-Vault/config/.claude.json ~/.claude.json
 ```
 
-## 8. Build AgentLauncher
-
-```bash
-cd ~/AI-Vault/ttc-agent-framework/launcher
-./build.sh
-```
-
-The app appears in `launcher/AgentLauncher.app`. Drag it to your Applications folder or add it to Login Items.
-
-Edit `AgentLauncher.swift` to add your agents before building.
-
-## 9. Clone agent repos
+## 8. Clone agent repos
 
 If you have existing agent repos, use the restore script:
 
@@ -112,7 +101,7 @@ cp -r ~/AI-Vault/ttc-agent-framework/agent-template ~/AI-Vault/Agents/MyNewAgent
 # Edit system-prompt.md, CLAUDE.md, etc.
 ```
 
-## 10. Add `apply` commands to ~/CLAUDE.md
+## 9. Add `apply` commands to ~/CLAUDE.md
 
 Copy `CLAUDE.md.example` to `~/CLAUDE.md` and update the table with your agents:
 

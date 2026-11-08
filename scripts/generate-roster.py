@@ -10,10 +10,8 @@ The CLAUDE.md table is protected by BEGIN/END marker comments that this script
 inserts on first run and uses on subsequent runs to locate the block.
 
 TODO (stretch goals, not yet implemented):
-  - AgentLauncher.swift auto-update: regenerate the menu items in
-    AI-Vault/Tools/AgentLauncher/AgentLauncher.swift from the roster.
   - Warp YAML auto-generation: emit ~/.warp/launch_configurations/TTC-Agent-*.yaml
-    for each agent. Both require re-compiling / re-deploying after change —
+    for each agent. Requires re-deploying after change —
     flag in agent-framework.md memory file as a future improvement.
 
 Usage:
